@@ -3,4 +3,4 @@ f: 0.5
 cr: 1
 maxIteractions: 100
 strategy: 0
-lp: 50 #saDE learning stage
+lp: 25 #saDE learning stage

@@ -2,7 +2,7 @@ import copy
 import random
 import numpy as np
 import yaml
-
+import sys
 import differential_evolution_ufrgs as de
 
 
@@ -11,9 +11,9 @@ class SADE(de.DifferentialEvolution):
     CRm = 0.5  # Crossover memory
     CRs = []
     mutation_quantity = 4
-    ns = np.empty(mutation_quantity)  # sucessfull rating
-    nf = np.empty(mutation_quantity)  # fails rating
-    probs = []  # probabilities
+    ns = np.zeros(mutation_quantity)  # sucessfull rating
+    nf = np.zeros(mutation_quantity)  # fails rating
+    probs = np.zeros(mutation_quantity)  # probabilities
 
 
     def __init__(self, problem):
@@ -21,9 +21,7 @@ class SADE(de.DifferentialEvolution):
         self.problem = problem
         self.read_parameters()
         for i in range(0, self.mutation_quantity):
-            self.ns.append(0)
-            self.nf.append(0)
-            self.probs.append(1 / self.mutation_quantity)
+            self.probs[i] = 1 / self.mutation_quantity
 
     def read_parameters(self):
         with open("de_config.yaml", 'r') as stream:
@@ -33,7 +31,6 @@ class SADE(de.DifferentialEvolution):
                 self.F = config['f']
                 self.CR = config['cr']
                 self.MAX = config['maxIteractions']
-                self.mutation_quantity = config['strategy']
                 self.LP = config['lp']
 
             except yaml.YAMLError as exc:
@@ -133,7 +130,8 @@ class SADE(de.DifferentialEvolution):
                     self.CR = random.gauss(self.CRm, 0.1)
 
                 print("Generation: ", i, " Energy: ", self.best_ind[i].fitness, " Diversity: ", self.diversity[i],
-                      " Pop Len: ", len(self.population), " Strategy: ", self.strategy, " CRm: ", self.CRm)
+                      " Pop Len: ", len(self.population), " Strategy: ", self.strategy, " CRm: ", self.CRm, " F: ",
+                      self.F)
 
             for j in range(0, self.NP):
 
