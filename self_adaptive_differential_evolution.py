@@ -48,8 +48,12 @@ class SADE(de.DifferentialEvolution):
             self.diversity[i] = self.update_diversity()
 
             if i % 25 == 0 and i > 0:
-                self.CRm = sum(self.CRs) / len(self.CRs)
-                self.CRs.clear()
+                try:
+                    self.CRm = sum(self.CRs) / len(self.CRs)
+                    self.CRs.clear()
+                except ZeroDivisionError:
+                    self.CRm = 0.5
+                    self.CRs.clear()
 
             if i % 5 == 0:
                 self.CR = -1
@@ -121,8 +125,12 @@ class SADE(de.DifferentialEvolution):
             self.diversity[i] = self.update_diversity()
 
             if i % 25 == 0 and i > 0:
-                self.CRm = sum(self.CRs) / len(self.CRs)
-                self.CRs.clear()
+                try:
+                    self.CRm = sum(self.CRs) / len(self.CRs)
+                    self.CRs.clear()
+                except ZeroDivisionError:
+                    self.CRm = 0.5
+                    self.CRs.clear()
 
             if i % 5 == 0:
                 self.CR = -1
