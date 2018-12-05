@@ -152,6 +152,35 @@ class DifferentialEvolution:
 
         return trial
 
+    def curr_to_apl(self, j, trial_individual):
+
+        while 1:
+            r2 = self.selection_operator()
+            if r2 != j and r2 != r1:
+                break
+        while 1:
+            r3 = self.selection_operator()
+            if r3 != j and r3 != r2 and r3 != r1:
+                break
+
+        jRand = random.randint(0, self.problem.dimensions - 1)
+
+        trial = trial_individual.dimensions
+
+        r_curr = self.population[j].dimensions
+        r1_dimensions = self.problem.generate_apl_individual()
+        r2_dimensions = self.population[r2].dimensions
+        r3_dimensions = self.population[r3].dimensions
+
+        for d in range(0, self.problem.dimensions):
+            if random.random() <= self.CR or d == jRand:
+                trial[d] = r_curr[d] + (self.F * (r1_dimensions[d] - r_curr[d])) + (
+                            self.F * (r2_dimensions[d] - r3_dimensions[d]))
+
+        self.problem.check_bounds(trial)
+
+        return trial
+
     def curr_to_best(self, j, trial_individual):
         best_dimensions = self.population[self.get_best_individual()].dimensions
 
