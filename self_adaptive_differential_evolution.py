@@ -10,7 +10,7 @@ class SADE(de.DifferentialEvolution):
     LP = 0  # Learning stage generations
     CRm = 0.5  # Crossover memory
     CRs = []
-    mutation_quantity = 4
+    mutation_quantity = 5
     ns = np.zeros(mutation_quantity)  # sucessfull rating
     nf = np.zeros(mutation_quantity)  # fails rating
     probs = np.zeros(mutation_quantity)  # probabilities
@@ -176,6 +176,8 @@ class SADE(de.DifferentialEvolution):
             self.best_1_bin(j=j, trial_individual=trial)
         elif self.strategy == 3:
             self.curr_to_best(j=j, trial_individual=trial)
+        elif self.strategy == 4:
+            self.curr_to_apl(j=j, trial_individual=trial)
         else:
             self.rand_1_bin(j, trial)
 
