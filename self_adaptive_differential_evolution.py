@@ -2,7 +2,6 @@ import copy
 import random
 import numpy as np
 import yaml
-import sys
 import differential_evolution_ufrgs as de
 
 
@@ -15,9 +14,9 @@ class SADE(de.DifferentialEvolution):
     nf = np.zeros(mutation_quantity)  # fails rating
     probs = np.zeros(mutation_quantity)  # probabilities
 
-
     def __init__(self, problem):
-        print("Self Adaptive Differential Evolution Instancied with Problem: " + str(type(problem)))
+        super().__init__(problem)
+        print('Self Adaptive Differential Evolution Instancied with Problem: ' + str(type(problem)))
         self.problem = problem
         self.read_parameters()
         for i in range(0, self.mutation_quantity):

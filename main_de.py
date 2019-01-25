@@ -23,7 +23,7 @@ problem_psp = psp.ProteinStructurePredictionProblem()
 # algorithm_de = de.DifferentialEvolution(problem_psp)
 algorithm_de = sade.SADE(problem_psp)
 algorithm_de.optimize()
-sys.exit()
+
 # problem_psp.generate_pdb(algorithm_de.population[algorithm_de.get_best_individual()].dimensions, "best_test.pdb")
 
 for i in range(0, 30):

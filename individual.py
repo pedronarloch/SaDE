@@ -18,12 +18,22 @@ class Individual(object):
 		for i in range(0, self.size):
 			self.dimensions[i] = random.uniform(lb[i], ub[i])
 
+
 class ClusteredIndividual(Individual):
 	cluster_id = 0
 
 	def __init__(self, ind_id, dimensionality):
 		super().__init__(ind_id, dimensionality)
 		self.cluster_id = 0
+
+
+class MultiObjectiveIndividual(Individual):
+
+	def __init__(self, ind_id, dimensionality, number_of_objectives):
+		super().__init__(ind_id, dimensionality)
+		self.fitness = np.zeros(number_of_objectives)
+		self.crowding_distance = 999.99
+		self.is_dominated = False
 
 class Particle(Individual):
 	getcontext().prec = 5
