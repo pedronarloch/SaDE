@@ -28,12 +28,14 @@ class ClusteredIndividual(Individual):
 
 
 class MultiObjectiveIndividual(Individual):
+	fitness = None
 
 	def __init__(self, ind_id, dimensionality, number_of_objectives):
 		super().__init__(ind_id, dimensionality)
 		self.fitness = np.zeros(number_of_objectives)
 		self.crowding_distance = 999.99
 		self.is_dominated = False
+		self.rank = 999
 
 class Particle(Individual):
 	getcontext().prec = 5

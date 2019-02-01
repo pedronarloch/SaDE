@@ -1,4 +1,9 @@
+import sys
+
 import numpy as np
+
+import differential_evolution_multi_objective
+from individual import MultiObjectiveIndividual
 
 
 def is_pareto_efficient_dumb(costs):
@@ -14,5 +19,37 @@ def is_pareto_efficient_dumb(costs):
 
 
 if __name__ == '__main__':
-    c = np.array([[3,3], [2, 2]])
-    print(is_pareto_efficient_dumb(c))
+    #c = np.array([[3, 3], [2, 2]])
+    #print(c)
+    #print(is_pareto_efficient_dumb(c))
+
+    population = np.empty(11, object)
+    demo = differential_evolution_multi_objective.DEMO()
+
+    for i in range(0, 11):
+        population[i] = MultiObjectiveIndividual(i, 2, 2)
+
+    population[0].fitness = np.array([4, 2])
+    population[1].fitness = np.array([3, 3])
+    population[2].fitness = np.array([2, 4])
+    population[3].fitness = np.array([5, 3])
+    population[4].fitness = np.array([3, 5])
+    population[5].fitness = np.array([7, 5])
+    population[6].fitness = np.array([-2, -2])
+    population[7].fitness = np.array([-2, -5])
+    population[8].fitness = np.array([-3, -4])
+    population[9].fitness = np.array([-4, -3])
+    population[10].fitness = np.array([-5, -2])
+
+    demo.population = population
+    demo.non_dominated_sorting()
+
+    demo.calculate_crowding_distance()
+
+    for i in range(0, len(demo.population)):
+        print(demo.population[i].rank, demo.population[i].crowding_distance)
+
+    sys.exit()
+
+
+

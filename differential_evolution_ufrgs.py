@@ -1,12 +1,14 @@
-import random
-import math
 import copy
-import yaml
+import math
+import random
+import sys
 import time
 from decimal import getcontext
-import individual
-import sys
+
 import numpy as np
+import yaml
+
+import individual
 
 
 class DifferentialEvolution:
@@ -397,4 +399,4 @@ class DifferentialEvolution:
             cvg.write(str(i) + "\t")
             cvg.write("{0:.2f}".format(self.population[i].fitness) + "\t")
             cvg.write(str(self.population[i].dimensions) + "\n")
-        cvg.close()
+            cvg.close()
