@@ -6,10 +6,12 @@ import differential_evolution_ufrgs as de
 
 
 class DEMO(de.DifferentialEvolution):
+    temp_offspring = None
 
     def __init__(self):
-        # super().__init__(None)
         print('Differential Evolution Multi Objective Instantied')
+        # super().__init__(None)
+        self.temp_offspring = []
 
     def is_pareto_efficient(self, costs):
         """
@@ -101,34 +103,38 @@ class DEMO(de.DifferentialEvolution):
 
     def generational_operator(self, gen_trial, pop_index):
 
-        return None
+        costs = np.array((gen_trial.fitness, self.population[pop_index].fitness))
+
+        # The generated individual dominates the parent
+        pareto_efficiency = self.is_pareto_efficient(costs)
+        if pareto_efficiency[0]:
+            self.temp_offspring.append(copy.deepcopy(gen_trial))
+        elif pareto_efficiency[1]: # The parent dominates the generated individual
+            self.temp_offspring.append(self.population[pop_index])
+        else:
+            self.temp_offspring.append(self.population[pop_index])
+            self.temp_offspring.append(gen_trial)
 
     def truncate_offspring(self):
 
         dtype = [('index', int), ('rank', float), ('crowding_distance', float)]
         values = []
+
         for i in range(0, len(self.temp_offspring)):
-            values.append((i, self.population[i].rank, self.population[i].crowding_distance))
+            values.append((i, self.temp_offspring[i].rank, self.temp_offspring.crowding_distance))
 
-        str_arr = np.array(values, dtype=dtype)
-        arr = np.sort(str_arr, order="rank")
+        str_arr = np.array(values, dtype=dtype).sort(order="rank")
+        rank_count = 0
+        #arr = np.sort(str_arr, order=["rank"])
 
-        for i in range(len(arr) - 1):
-
-            if arr[i]['rank'] < arr[i+1]['rank']:
-                self.offspring[i] = self.population[arr[i]['index']]
-
-            elif arr[i]['rank'] == arr[i+1]['rank'] \
-                    and arr[i]['crowding_distance'] > arr[i+1]['crowding_distance']:
-                self.offspring[i] = self.population[arr[i]['index']]
+        while len(self.offspring) < self.NP:
+            print("Oh, hello detective...")
 
 
 
-        return None
 
-    # ToDo It is needed to truncate the population by the dominance order and crowding distance
-    def truncate_population(self):
-        return None
+
+
 
     def optimize(self, i_pop=None):
         if i_pop is None:
@@ -148,9 +154,13 @@ class DEMO(de.DifferentialEvolution):
 
                 self.rand_1_bin(j, trial)
 
-                trial.fitness = self.problem.evaluate(trial.dimensions)  # Not created yet
+                trial.fitness = self.problem.evaluate(trial.dimensions)
 
                 self.generational_operator(trial, self.population[j])
+
+            if len(self.temp_offspring) > self.NP:
+                self.truncate_offspring()
+
 
             self.population = np.empty(self.NP, object)
             self.population = np.copy(self.offspring)

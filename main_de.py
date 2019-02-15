@@ -1,10 +1,14 @@
-import protein_structure_prediction as psp
-import self_adaptive_differential_evolution as sade
-import individual as individuals
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import numpy as np
+import pandas as pd
+
+import problems.protein_structure_prediction as psp
+
+import individual as individuals
+import self_adaptive_differential_evolution as sade
 
 
 def retrieve_init_pop(protein, run_id):
@@ -20,13 +24,15 @@ def retrieve_init_pop(protein, run_id):
 
 
 problem_psp = psp.ProteinStructurePredictionProblem()
-# algorithm_de = de.DifferentialEvolution(problem_psp)
 algorithm_de = sade.SADE(problem_psp)
 algorithm_de.optimize()
 
-# problem_psp.generate_pdb(algorithm_de.population[algorithm_de.get_best_individual()].dimensions, "best_test.pdb")
+dtype = [('run', int), ('final_energy', float), ('final_rmsd', float), ('final_gdt', float), ('final_tm', float)]
+result_arr = np.ndarray(30, dtype=dtype)
 
 for i in range(0, 30):
+
+    result_arr[i]['run'] = i
 
     pre_defined_pop = np.empty(algorithm_de.NP, individuals.Individual)
     list_pop = retrieve_init_pop(problem_psp.protein, i)
@@ -48,8 +54,9 @@ for i in range(0, 30):
     # algorithm_de.optimize(pre_defined_pop)
 
     algorithm_de.optimize()
-    algorithm_de.get_results_report(file_name + "convergence")
     end_time = time.time()
+
+    algorithm_de.get_results_report(file_name + "convergence")
 
     t_file = open(file_name + "run_time", "w")
     t_file.write(str(end_time - init_time) + " seconds")
@@ -69,6 +76,17 @@ for i in range(0, 30):
         rmsd_file.write(
             str(j) + "\t" + str(problem_psp.evaluate(algorithm_de.population[j].dimensions)) + "\t" + str(rmsd) + "\n")
     rmsd_file.close()
+
+    best_final_individual = algorithm_de.population[algorithm_de.get_best_individual()]
+
+    problem_psp.generate_pdb(best_final_individual.dimensions, file_name +
+                             "best_predicted_individual.pdb")
+
+    result_arr[i]['final_energy'] = best_final_individual.fitness
+
+    best_final_pose = problem_psp.create_pose_centroid(best_final_individual.dimensions)
+
+    result_arr[i]['final_rmsd'] = problem_psp.compare_rmsd_rcsb(best_final_pose)
 
     algorithm_de.dump()
     sys.exit()
