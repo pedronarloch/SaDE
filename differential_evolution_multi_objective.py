@@ -1,5 +1,6 @@
 import copy
 import math
+
 import numpy as np
 
 import differential_evolution_ufrgs as de
@@ -70,6 +71,7 @@ class DEMO(de.DifferentialEvolution):
             str_arr = np.array(values, dtype=dtype)  # Structured Array based on individual information
 
             arr = np.sort(str_arr, order='objective_1')
+
             # In crowding distance, boundaries must have its distance set to Infinite.
             self.population[arr[0]['index']].crowding_distance = math.inf
             self.population[arr[-1]['index']].crowding_distance = math.inf
@@ -109,7 +111,7 @@ class DEMO(de.DifferentialEvolution):
         pareto_efficiency = self.is_pareto_efficient(costs)
         if pareto_efficiency[0]:
             self.temp_offspring.append(copy.deepcopy(gen_trial))
-        elif pareto_efficiency[1]: # The parent dominates the generated individual
+        elif pareto_efficiency[1]:  # The parent dominates the generated individual
             self.temp_offspring.append(self.population[pop_index])
         else:
             self.temp_offspring.append(self.population[pop_index])
@@ -121,20 +123,44 @@ class DEMO(de.DifferentialEvolution):
         values = []
 
         for i in range(0, len(self.temp_offspring)):
-            values.append((i, self.temp_offspring[i].rank, self.temp_offspring.crowding_distance))
+            values.append((i, self.temp_offspring[i].rank, self.temp_offspring[i].crowding_distance))
 
-        str_arr = np.array(values, dtype=dtype).sort(order="rank")
+        str_arr = np.array(values, dtype=dtype)
+        str_arr = np.sort(str_arr, order="rank")
+
         rank_count = 0
-        #arr = np.sort(str_arr, order=["rank"])
+        aux = []
 
-        while len(self.offspring) < self.NP:
-            print("Oh, hello detective...")
+        aux_offspring = []
+        aux_idx = 0
 
+        while len(aux_offspring) < self.NP:
+            aux.clear()
+            for i in range(aux_idx, len(str_arr)):
+                if str_arr[i]['rank'] == rank_count:
+                    aux.append(str_arr[i])
+                    aux_idx += 1
+                else:
+                    break
 
+            if len(aux) + len(aux_offspring) <= self.NP:
+                aux_offspring.extend(copy.copy(aux))
+            else:
 
+                str_arr = np.array(aux, dtype=dtype)
+                str_arr = np.sort(str_arr, order="crowding_distance")[::-1]
+                index = 0
 
+                while len(aux_offspring) < self.NP:
+                    aux_offspring.append(str_arr[index])
+                    index += 1
 
+                break
 
+            rank_count += 1
+
+        for index, element in enumerate(aux_offspring):
+            self.offspring[index] = copy.deepcopy(self.population[element['index']])
 
     def optimize(self, i_pop=None):
         if i_pop is None:
@@ -158,9 +184,9 @@ class DEMO(de.DifferentialEvolution):
 
                 self.generational_operator(trial, self.population[j])
 
-            if len(self.temp_offspring) > self.NP:
-                self.truncate_offspring()
-
+            self.non_dominated_sorting()
+            self.calculate_crowding_distance()
+            self.truncate_offspring()
 
             self.population = np.empty(self.NP, object)
             self.population = np.copy(self.offspring)

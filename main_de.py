@@ -3,9 +3,7 @@ import sys
 import time
 
 import numpy as np
-import pandas as pd
-
-import problems.protein_structure_prediction as psp
+import problems.protein_structure_prediction_problem as psp
 
 import individual as individuals
 import self_adaptive_differential_evolution as sade

@@ -19,14 +19,13 @@ def is_pareto_efficient_dumb(costs):
 
 
 if __name__ == '__main__':
-    #c = np.array([[3, 3], [2, 2]])
-    #print(c)
-    #print(is_pareto_efficient_dumb(c))
 
-    population = np.empty(11, object)
+    population = np.empty(12, object)
     demo = differential_evolution_multi_objective.DEMO()
+    demo.NP = 8
+    demo.dump()
 
-    for i in range(0, 11):
+    for i in range(0, 12):
         population[i] = MultiObjectiveIndividual(i, 2, 2)
 
     population[0].fitness = np.array([4, 2])
@@ -40,14 +39,17 @@ if __name__ == '__main__':
     population[8].fitness = np.array([-3, -4])
     population[9].fitness = np.array([-4, -3])
     population[10].fitness = np.array([-5, -2])
+    population[11].fitness = np.array([-3.5, -3.5])
 
     demo.population = population
     demo.non_dominated_sorting()
-
     demo.calculate_crowding_distance()
+    demo.temp_offspring = population
 
     for i in range(0, len(demo.population)):
         print(demo.population[i].rank, demo.population[i].crowding_distance)
+
+    demo.truncate_offspring()
 
     sys.exit()
 
