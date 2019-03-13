@@ -1,18 +1,55 @@
 import copy
 import math
-
+import sys
 import numpy as np
 
 import differential_evolution_ufrgs as de
+from individual import MultiObjectiveIndividual
 
 
 class DEMO(de.DifferentialEvolution):
     temp_offspring = None
 
-    def __init__(self):
+    def __init__(self, problem):
         print('Differential Evolution Multi Objective Instantied')
-        # super().__init__(None)
+        super().__init__(problem)
         self.temp_offspring = []
+        self.problem.is_multi_objective = True
+
+    def init_population(self):
+        print("Initializing a Random Population")
+        self.population = np.empty(self.NP, object)
+
+        for i in range(0, self.NP):
+            ind = MultiObjectiveIndividual(i, self.problem.dimensions, 2)
+            ind.size = self.problem.dimensions
+            ind.rand_gen(self.problem.lb, self.problem.ub)
+
+            fitness_value = self.problem.evaluate(ind.dimensions)
+            ind.fitness[0] = fitness_value[0]
+            ind.fitness[1] = fitness_value[1]
+
+            self.population[i] = ind
+
+        self.initial_population = copy.deepcopy(self.population)
+
+    def init_population_by_apl(self):
+        print("Initializing the Population by APL")
+        self.population = np.empty(self.NP, object)
+
+        for i in range(0, self.NP):
+            ind = MultiObjectiveIndividual(i, self.problem.dimensions, 2)
+            ind.dimensions = np.copy(self.problem.generate_apl_individual())
+
+            fitness_value = self.problem.evaluate(ind.dimensions)
+            ind.fitness[0] = fitness_value[0]
+            ind.fitness[1] = fitness_value[1]
+
+            ind.ind_id = i
+
+            self.population[i] = ind
+
+        self.initial_population = copy.deepcopy(self.population)
 
     def is_pareto_efficient(self, costs):
         """
@@ -109,13 +146,24 @@ class DEMO(de.DifferentialEvolution):
 
         # The generated individual dominates the parent
         pareto_efficiency = self.is_pareto_efficient(costs)
-        if pareto_efficiency[0]:
-            self.temp_offspring.append(copy.deepcopy(gen_trial))
-        elif pareto_efficiency[1]:  # The parent dominates the generated individual
-            self.temp_offspring.append(self.population[pop_index])
-        else:
+
+        if pareto_efficiency[0] and pareto_efficiency[1]:  # Both solutions are in the optimal front (non-dominance)
             self.temp_offspring.append(self.population[pop_index])
             self.temp_offspring.append(gen_trial)
+        elif pareto_efficiency[0] and not pareto_efficiency[1]:  # Offspring dominates parent
+            self.temp_offspring.append(copy.deepcopy(gen_trial))
+        elif not pareto_efficiency[0] and pareto_efficiency[1]:  # Parents dominates offspring
+            self.temp_offspring.append(self.population[pop_index])
+        else:  # Non-dominance (optimal front)
+            self.temp_offspring.append(self.population[pop_index])
+            self.temp_offspring.append(gen_trial)
+
+        print(gen_trial.fitness)
+        print(self.population[pop_index].fitness)
+        print(pareto_efficiency)
+        print(len(self.temp_offspring))
+
+        sys.exit()
 
     def truncate_offspring(self):
 
@@ -169,20 +217,23 @@ class DEMO(de.DifferentialEvolution):
             self.population = i_pop
 
         for i in range(0, self.MAX):
-            self.best_ind[i] = self.population[self.get_best_individual()]
-            self.diversity[i] = self.update_diversity()
+            # self.best_ind[i] = self.population[self.get_best_individual()]
+            # self.diversity[i] = self.update_diversity()
 
             if i % 5 == 0:
-                print("Generation: ", i, "Fitness: ", self.best_ind[i].fitness, " Diversity: ", self.diversity[i])
+                print("Generation: ", i, "Population Size: ", len(self.population))
 
             for j in range(0, self.NP):
                 trial = copy.deepcopy(self.population[j])
 
                 self.rand_1_bin(j, trial)
 
-                trial.fitness = self.problem.evaluate(trial.dimensions)
+                fitness_vals = self.problem.evaluate(trial.dimensions)
 
-                self.generational_operator(trial, self.population[j])
+                trial.fitness[0] = fitness_vals[0]
+                trial.fitness[1] = fitness_vals[1]
+
+                self.generational_operator(trial, j)
 
             self.non_dominated_sorting()
             self.calculate_crowding_distance()

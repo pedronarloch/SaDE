@@ -6,7 +6,7 @@ import numpy as np
 import problems.protein_structure_prediction_problem as psp
 
 import individual as individuals
-import self_adaptive_differential_evolution as sade
+import differential_evolution_multi_objective as demo
 
 
 def retrieve_init_pop(protein, run_id):
@@ -22,8 +22,11 @@ def retrieve_init_pop(protein, run_id):
 
 
 problem_psp = psp.ProteinStructurePredictionProblem()
-algorithm_de = sade.SADE(problem_psp)
+algorithm_de = demo.DEMO(problem_psp)
 algorithm_de.optimize()
+
+
+sys.exit()
 
 dtype = [('run', int), ('final_energy', float), ('final_rmsd', float), ('final_gdt', float), ('final_tm', float)]
 result_arr = np.ndarray(30, dtype=dtype)
