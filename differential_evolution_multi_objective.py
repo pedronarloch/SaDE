@@ -2,7 +2,7 @@ import copy
 import math
 import sys
 import numpy as np
-
+import random
 import differential_evolution_ufrgs as de
 from individual import MultiObjectiveIndividual
 
@@ -158,13 +158,6 @@ class DEMO(de.DifferentialEvolution):
             self.temp_offspring.append(self.population[pop_index])
             self.temp_offspring.append(gen_trial)
 
-        print(gen_trial.fitness)
-        print(self.population[pop_index].fitness)
-        print(pareto_efficiency)
-        print(len(self.temp_offspring))
-
-        sys.exit()
-
     def truncate_offspring(self):
 
         dtype = [('index', int), ('rank', float), ('crowding_distance', float)]
@@ -210,6 +203,39 @@ class DEMO(de.DifferentialEvolution):
         for index, element in enumerate(aux_offspring):
             self.offspring[index] = copy.deepcopy(self.population[element['index']])
 
+    # TODO It is necessary to modify the operator in order to consider individuals from the population AND offspring
+    def rand_1_bin(self, j, trial_individual):
+
+        while 1:
+            r1 = self.selection_operator()
+            if r1 != j:
+                break
+
+        while 1:
+            r2 = self.selection_operator()
+            if r2 != j and r2 != r1:
+                break
+
+        while 1:
+            r3 = self.selection_operator()
+            if r3 != r2 and r3 != r1 and r3 != j:
+                break
+
+        jRand = random.randint(0, self.problem.dimensions - 1)
+
+        trial = trial_individual.dimensions
+        r1_dimensions = self.population[r1].dimensions
+        r2_dimensions = self.population[r2].dimensions
+        r3_dimensions = self.population[r3].dimensions
+
+        for d in range(0, self.problem.dimensions):
+            if random.random() <= self.CR or d == jRand:
+                trial[d] = r1_dimensions[d] + (self.F * (r2_dimensions[d] - r3_dimensions[d]))
+
+        self.problem.check_bounds(trial)
+
+        return trial
+
     def optimize(self, i_pop=None):
         if i_pop is None:
             self.init_population()
@@ -234,6 +260,9 @@ class DEMO(de.DifferentialEvolution):
                 trial.fitness[1] = fitness_vals[1]
 
                 self.generational_operator(trial, j)
+
+            print(len(self.temp_offspring))
+            sys.exit()
 
             self.non_dominated_sorting()
             self.calculate_crowding_distance()
