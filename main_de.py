@@ -3,7 +3,7 @@ import sys
 import time
 
 import numpy as np
-import problems.protein_structure_prediction_problem as psp
+import problem.protein_structure_prediction_problem as psp
 
 import individual as individuals
 import differential_evolution_multi_objective as demo

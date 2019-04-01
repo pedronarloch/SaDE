@@ -7,8 +7,8 @@ import yaml
 from pyrosetta.rosetta.core.scoring import CA_rmsd
 from pyrosetta.rosetta.core.scoring.dssp import Dssp
 
-from problems.angle_prob_list import hists as apl
-from problems.generic_problem import Problem
+from problem.angle_prob_list import hists as apl
+from problem.generic_problem import Problem
 
 
 class ProteinStructurePredictionProblem(Problem):

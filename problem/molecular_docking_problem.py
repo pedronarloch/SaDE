@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import yaml
 
-from problems.generic_problem import Problem
+from problem.generic_problem import Problem
 
 
 class MolecularDockingProblem(Problem):
@@ -28,6 +28,7 @@ class MolecularDockingProblem(Problem):
         self.start_branchs = {}
         self.end_branchs = {}
         self.index_translate = {}
+        self.index_atoms = {}
         self.index_ref = 0
         self.index_sec = 0
 
@@ -181,6 +182,14 @@ class MolecularDockingProblem(Problem):
 
         else:
             return -1
+
+    def get_dic_modified_atoms(self):
+        modified_atoms = {}
+
+        for key in self.index_atoms:
+            modified_atoms[key] = self.mod_pos_atoms[self.index_atoms[key]]
+
+        return modified_atoms
 
     # translate matrix by x, y, z values
     def translate_matrix(self, translation):
