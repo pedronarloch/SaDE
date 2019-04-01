@@ -1,12 +1,14 @@
-from rosetta.core.scoring.dssp import Dssp
-from rosetta.core.scoring import CA_rmsd
-from problems import Problem
-import hists as apl
+import random
+
+import angles
 import numpy as np
 import pyrosetta
-import random
-import angles
 import yaml
+from pyrosetta.rosetta.core.scoring import CA_rmsd
+from pyrosetta.rosetta.core.scoring.dssp import Dssp
+
+from problem.angle_prob_list import hists as apl
+from problem.generic_problem import Problem
 
 
 class ProteinStructurePredictionProblem(Problem):
@@ -18,25 +20,25 @@ class ProteinStructurePredictionProblem(Problem):
         self.start_rosetta_energy_function()
         self.get_bounds()
         self.apl_hist = apl.HistogramFiles(self.protein, self.fasta, self.secondary_structure, 3)
+        self.is_multi_objective = False
 
     def start_rosetta_energy_function(self):
         pyrosetta.init()
 
         if self.rosetta_energy_type == 'centroid':
-            self.scorefxn = pyrosetta.create_score_function('score3')
-            self.generalPose = pyrosetta.pose_from_sequence(self.fasta, "centroid")
+            self.scorefxn = pyrosetta.create_score_function("score3")
+            self.general_pose = pyrosetta.pose_from_sequence(self.fasta, "centroid")
             self.pose_2 = pyrosetta.pose_from_sequence(self.fasta, "centroid")
 
             self.dimensions = len(self.fasta * 2)
 
         elif self.rosetta_energy_type == 'full_atom':
             self.scorefxn = pyrosetta.get_fa_scorefxn()
-            self.generalPose = pyrosetta.pose_from_sequence(self.fasta, "fa_standard")
+            self.general_pose = pyrosetta.pose_from_sequence(self.fasta, "fa_standard")
 
         else:
             print("There is not any energy type: ", self.rosetta_energy_type)
 
-        #self.rcsb_protein = toolbox.pose_from_rcsb(self.protein)
         self.rcsb_protein = pyrosetta.pose_from_pdb(self.protein+".clean.pdb")
 
     def read_parameters(self):
@@ -54,29 +56,34 @@ class ProteinStructurePredictionProblem(Problem):
     def evaluate(self, angles):
         energy = 0.0
 
-        if self.rosetta_energy_type == 'centroid':
-            energy = self.evaluate_by_centroid(angles)
-        elif self.rosetta_energy_type == 'full_atom':
-            energy = self.evaluate_by_full_atom(angles)
+        if self.is_multi_objective:
+            if self.rosetta_energy_type == 'centroid':
+                energy = self.evaluate_by_centroid_mo(angles)
+            elif self.rosetta_energy_type == 'full_atom':
+                energy = self.evaluate_by_full_atom_mo(angles)  # Not implemented yet
+        else:
+            if self.rosetta_energy_type == 'centroid':
+                energy = self.evaluate_by_centroid(angles)
+            elif self.rosetta_energy_type == 'full_atom':
+                energy = self.evaluate_by_full_atom(angles)  # Not implemented yet
 
-        return float(energy)
+        return energy
 
     def check_bounds_random(self, trial):
         for i in range(0, len(trial)):
             if trial[i] < -180:
-                trial[i] = random.uniform(-180,180)
+                trial[i] = random.uniform(-180, 180)
             elif trial[i] > 180:
-                trial[i] = random.uniform(-180,180)
-
+                trial[i] = random.uniform(-180, 180)
 
     def check_bounds(self, trial):
         for i in range(0, len(trial)):
             if trial[i] < -180:
-                trial[i] = float(format(angles.normalize(trial[i],-180,180), '.4f'))
+                trial[i] = float(format(angles.normalize(trial[i], -180, 180), '.4f'))
             elif trial[i] > 180:
-                trial[i] = float(format(angles.normalize(trial[i],-180,180), '.4f'))
+                trial[i] = float(format(angles.normalize(trial[i], -180, 180), '.4f'))
 
-    def get_bounds(self, label = 0):
+    def get_bounds(self):
         self.lb = np.zeros(self.dimensions)
         self.ub = np.zeros(self.dimensions)
 
@@ -88,10 +95,30 @@ class ProteinStructurePredictionProblem(Problem):
         pose = self.create_pose_centroid(angles)
         score = float(format(self.scorefxn(pose), '.4f'))
 
-        if self.use_ss_reinforcement == True:
+        if self.use_ss_reinforcement:
             score += self.get_ss_reinforcement(pose)
 
         return score
+
+    def evaluate_by_centroid_mo(self, angles):
+        pose = self.create_pose_centroid(angles)
+        self.scorefxn(pose)
+        energy_vals = pose.energies().total_energies_array()
+
+        vdw = energy_vals[0][0]  # The van der Waals energy from PyRosetta is the first term. Its weight is set as 1
+        cenpack = energy_vals[0][1]
+        pair = energy_vals[0][2]
+        env = energy_vals[0][3]
+        cbeta = energy_vals[0][4]
+        rg = energy_vals[0][5] * 3  # Radius of Gyration is the 6th element. Its weight is set to 3
+        hs_pair = energy_vals[0][6]
+        ss_pair = energy_vals[0][7]
+        rsigma = energy_vals[0][8]
+        sheet = energy_vals[0][9]
+
+        other_sum = cenpack + pair + env + cbeta + rg + hs_pair + ss_pair + rsigma + sheet
+
+        return vdw, other_sum
 
     def generate_apl_individual(self):
         generated_angles = self.apl_hist.read_histogram()
@@ -100,7 +127,6 @@ class ProteinStructurePredictionProblem(Problem):
         for i in range(0, len(generated_angles)):
             aux[index] = generated_angles[i][0]
             aux[index + 1] = generated_angles[i][1]
-            #aux[index + 2] = 180 #generated_angles[i][2]
             index += 2
 
         return aux
@@ -129,26 +155,23 @@ class ProteinStructurePredictionProblem(Problem):
         return reinforcement
 
     def create_pose_centroid(self, angles):
-        #pose = pyrosetta.pose_from_sequence(self.fasta, "centroid")
-        pose = self.generalPose
+        pose = self.general_pose
         index = 0
         for i in range(0, len(self.fasta)):
             pose.set_phi(i+1, angles[index])
             pose.set_psi(i+1, angles[index+1])
-            #pose.set_omega(i+1, angles[index+2])
             pose.set_omega(i+1, 180)
             index += 2
 
         return pose
 
     def create_new_pose_centroid(self, angles):
-        pose = self.pose_2 #pyrosetta.pose_from_sequence(self.fasta, "centroid")
+        pose = self.pose_2
         index = 0
 
         for i in range(0, len(self.fasta)):
             pose.set_phi(i+1, angles[index])
             pose.set_psi(i+1, angles[index+1])
-            #pose.set_omega(i+1, angles[index+2])
             pose.set_omega(i+1, 180)
             index += 2
 
@@ -161,21 +184,16 @@ class ProteinStructurePredictionProblem(Problem):
         return pose
 
     def compare_rmsd_rcsb(self, pose):
-        rmsd = 0.0
-
         rmsd = CA_rmsd(self.rcsb_protein, pose)
 
         return rmsd
 
     def compare_rmsd(self, pose1, pose2):
-        rmsd = 0.0
-
         rmsd = CA_rmsd(pose1, pose2)
 
         return rmsd
 
     def compare_rmsd_v2(self, ind_1, ind_2):
-        rmsd = 999.99
         pose_1 = self.create_pose_centroid(ind_1)
         pose_2 = self.create_new_pose_centroid(ind_2)
 

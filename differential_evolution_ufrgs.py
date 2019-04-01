@@ -1,12 +1,13 @@
-import random
-import math
 import copy
-import yaml
-import time
-from decimal import getcontext
-import individual
+import math
+import random
 import sys
+from decimal import getcontext
+
 import numpy as np
+import yaml
+
+import individual
 
 
 class DifferentialEvolution:
@@ -146,7 +147,36 @@ class DifferentialEvolution:
         for d in range(0, self.problem.dimensions):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r_curr[d] + (self.F * (r1_dimensions[d] - r_curr[d])) + (
-                            self.F * (r2_dimensions[d] - r3_dimensions[d]))
+                        self.F * (r2_dimensions[d] - r3_dimensions[d]))
+
+        self.problem.check_bounds(trial)
+
+        return trial
+
+    def curr_to_apl(self, j, trial_individual):
+
+        while 1:
+            r2 = self.selection_operator()
+            if r2 != j:
+                break
+        while 1:
+            r3 = self.selection_operator()
+            if r3 != j and r3 != r2:
+                break
+
+        jRand = random.randint(0, self.problem.dimensions - 1)
+
+        trial = trial_individual.dimensions
+
+        r_curr = self.population[j].dimensions
+        r1_dimensions = self.problem.generate_apl_individual()
+        r2_dimensions = self.population[r2].dimensions
+        r3_dimensions = self.population[r3].dimensions
+
+        for d in range(0, self.problem.dimensions):
+            if random.random() <= self.CR or d == jRand:
+                trial[d] = r_curr[d] + (self.F * (r1_dimensions[d] - r_curr[d])) + (
+                        self.F * (r2_dimensions[d] - r3_dimensions[d]))
 
         self.problem.check_bounds(trial)
 
@@ -203,7 +233,7 @@ class DifferentialEvolution:
         for d in range(0, self.problem.dimensions):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = trial[d] + (self.F * (r1_dimensions[d] - r2_dimensions[d])) + (
-                            self.F * (best_dimensions[d] - trial[d]))
+                        self.F * (best_dimensions[d] - trial[d]))
 
         self.problem.check_bounds(trial)
 
@@ -234,7 +264,7 @@ class DifferentialEvolution:
         for d in range(0, self.problem.dimensions):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r1_dimensions[d] + (self.F * (r2_dimensions[d] - r3_dimensions[d])) + (
-                            self.F * (best_dimensions[d] - r1_dimensions[d]))
+                        self.F * (best_dimensions[d] - r1_dimensions[d]))
 
         self.problem.check_bounds(trial)
 
@@ -316,8 +346,6 @@ class DifferentialEvolution:
         if not self.seed is None:
             random.seed(self.seed)
 
-        init_time = time.time()
-
         if i_pop is None:
             # self.init_population();
             self.init_population_by_apl()
@@ -390,11 +418,4 @@ class DifferentialEvolution:
 
         cvg.close()
 
-        cvg = open(name_spec + "_final_individuals", "w")
-        cvg.write("i\tenergy\tdimensions\n")
-
-        for i in range(0, self.NP):
-            cvg.write(str(i) + "\t")
-            cvg.write("{0:.2f}".format(self.population[i].fitness) + "\t")
-            cvg.write(str(self.population[i].dimensions) + "\n")
-        cvg.close()
+        best_ind = self.population[self.get_best_individual()]
