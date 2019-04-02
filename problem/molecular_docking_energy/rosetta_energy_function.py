@@ -1,7 +1,6 @@
 # TODO list the objects used, avoiding the import of the whole lib
 
 import pyrosetta
-import copy
 
 
 # TODO Refactor the whole class due to architectural issues.
@@ -10,12 +9,12 @@ class RosettaScoringFunction:
     def __init__(self, complex):
         pyrosetta.init(extra_options='-mute all')
 
-        self.ligand_params = "instances/" + complex + "/ATX.params"
-        self.pdb_file_name = "instances/" + complex + ".pdb"
+        self.ligand_params = ""
+        self.pdb_file_name = "instances/" + complex + "/" + complex + ".pdb"
         self.partners = ""
         self.pose = None
         self.res_set = None
-        self.dock_jump = None
+        self.dock_jump = 1
         self.ligand_residue = None
         self.pos_atoms = {}
         self.modified_atoms = None
@@ -53,6 +52,9 @@ class RosettaScoringFunction:
         self.pose.energies().clear()
 
         if dic is not None:
+            key_list = list(self.pos_atoms.keys())
+            print(key_list)
+
             for key in self.pos_atoms:
                 vec = pyrosetta.rosetta.numeric.xyzVector_double_t(dic[key][0], dic[key][1], dic[key][2])
                 self.pose.residue(self.pose.total_residue()).set_xyz(self.ligand_residue.atom_index(key), vec)

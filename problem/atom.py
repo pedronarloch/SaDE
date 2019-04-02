@@ -67,7 +67,7 @@ class Atom(object):
         return self.residue.strip()
 
     def get_pos(self):
-        return map(float, (self.xCor, self.yCor, self.zCor))
+        return [float(self.xCor), float(self.yCor), float(self.zCor)]
 
     def get_content(self):
         return self.line

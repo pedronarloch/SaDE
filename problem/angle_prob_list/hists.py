@@ -19,7 +19,7 @@ class HistogramFiles:
 
 	def carrega_apl(self):
 		self.APL = {}
-		path_apl = "./Proteins/"+self.protein+"/"
+		path_apl = "./proteins/"+self.protein+"/"
 		print("Loading APL from: ", path_apl)
 
 		if self.heat_maps == 1:

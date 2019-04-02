@@ -7,7 +7,7 @@ import problem.protein_structure_prediction_problem as psp
 
 import individual as individuals
 import differential_evolution_multi_objective as demo
-
+from problem import molecular_docking_problem as md
 
 def retrieve_init_pop(protein, run_id):
     ind_list = list()
@@ -20,10 +20,14 @@ def retrieve_init_pop(protein, run_id):
 
     return ind_list
 
+aaa = [-0.982897881758, 0.671396009811 , -0.799996446743, 2.39741556492, -0.769673999863, 0.506933731665, -1.82970429237, 2.01345039389, 1.50961082747, -1.35435025798, 2.17498569732, 1.81123412312, 1.34410270673, -3.04627114803]
 
-problem_psp = psp.ProteinStructurePredictionProblem()
-algorithm_de = demo.DEMO(problem_psp)
-algorithm_de.optimize()
+problem_md = md.MolecularDockingProblem()
+print(len(aaa))
+problem_md.evaluate(aaa)
+#problem_psp = psp.ProteinStructurePredictionProblem()
+#algorithm_de = demo.DEMO(problem_psp)
+#algorithm_de.optimize()
 
 
 sys.exit()

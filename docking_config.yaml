@@ -1,0 +1,4 @@
+vina_path: "./vina"
+vina_config: "config.txt"
+complex: "1AAQ"
+cube_based: "False"

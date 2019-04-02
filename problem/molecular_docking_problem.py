@@ -1,11 +1,12 @@
-from math import pi, sin, cos
-from problem.molecular_docking_energy import rosetta_energy_function
-
-import numpy as np
 import copy
+from math import pi, sin, cos
+import sys
+from problem import atom
+import numpy as np
 import yaml
 
 from problem.generic_problem import Problem
+from problem.molecular_docking_energy import rosetta_energy_function
 
 
 class MolecularDockingProblem(Problem):
@@ -29,13 +30,20 @@ class MolecularDockingProblem(Problem):
         self.vina_config = ""
         self.docking_complex = ""
 
+        self.atom_sec = None
+        self.atom_ref = None
+        self.partners = None
+
         self.read_parameters()
         self.read_vina_config_file()
+
+        self.instance_path = "instances/" + self.docking_complex + "/"
 
         self.mod_pos_atoms = []
         self.content = []
         self.pos_atoms = []
         self.branchs = {}
+        self.num_branchs = 0
         self.index_branch = {}
         self.start_branchs = {}
         self.end_branchs = {}
@@ -44,14 +52,16 @@ class MolecularDockingProblem(Problem):
         self.index_ref = 0
         self.index_sec = 0
 
-        self.atom_sec = None
-        self.atom_ref = None
-        self.partners = None
+
+        self.energy_function = rosetta_energy_function.RosettaScoringFunction(self.docking_complex)
+
+        self.read_ligand_file()
+        self.original_pos_atoms = copy.copy(self.pos_atoms)
 
         self.get_bounds()
         self.is_multi_objective = False
 
-        self.energy_function = rosetta_energy_function.RosettaScoringFunction()
+        print("Init from Molecular Docking problem!")
 
     def read_parameters(self):
         with open("docking_config.yaml", 'r') as stream:
@@ -65,7 +75,7 @@ class MolecularDockingProblem(Problem):
                 print(exc)
 
     def read_vina_config_file(self):
-        file = open("Docking/" + self.docking_complex + "/" + self.vina_config)
+        file = open("instances/" + self.docking_complex + "/" + self.vina_config)
 
         while True:
             buffer_line = file.readline().split()
@@ -94,6 +104,56 @@ class MolecularDockingProblem(Problem):
             elif buffer_line[0] == '#sec':
                 self.atom_sec = buffer_line[2]
 
+    def read_ligand_file(self):
+        finish = False
+        file = open(self.instance_path + "ligand.pdbqt", "r")
+        count_start_branchs = 1
+        v_atom = None
+
+        while not finish:
+            line = file.readline()
+
+            if not line:
+                finish = True
+
+            else:
+                v_atom = atom.Atom(line)
+                self.content.append(v_atom)
+
+                if v_atom.get_tag() == self.END_TAG:
+                    finish = True
+
+                else:
+                    if v_atom.get_tag() in self.ATOM_TAG:
+                        atom_name = v_atom.get_atom()
+                        self.index_atoms[atom_name] = len(self.pos_atoms)
+                        self.pos_atoms.append(v_atom.get_pos())
+
+                        # get central atom's index (reference to bigger cube)
+                        if atom_name == self.atom_ref:
+                            self.index_ref = len(self.pos_atoms) - 1
+
+                        elif atom_name == self.atom_sec:
+                            self.index_sec = len(self.pos_atoms) - 1
+
+                        self.index_translate[v_atom.get_serial()] = len(self.pos_atoms)
+
+                    # get ligand branchs (ligand's rotation points)
+                    elif v_atom.get_tag() == self.BRANCH_TAG:
+                        branch = line.split()
+                        self.branchs[count_start_branchs] = (int(branch[1]), int(branch[2]))
+                        self.start_branchs[count_start_branchs] = len(self.pos_atoms)
+                        self.index_branch[branch[1] + branch[2]] = count_start_branchs
+                        count_start_branchs += 1
+
+                    elif v_atom.get_tag() == self.ENDBRANCH_TAG:
+                        branch = line.split()
+                        self.end_branchs[self.index_branch[branch[1] + branch[2]]] = len(self.pos_atoms) - 1
+
+        file.close()
+        self.num_branchs = len(self.index_branch)
+        self.dimensions = 4 + self.num_branchs
+
     def get_bounds(self):
         self.lb = np.zeros(self.dimensions)
         self.ub = np.zeros(self.dimensions)
@@ -110,7 +170,9 @@ class MolecularDockingProblem(Problem):
         energy = 0.0
 
         self.perform_docking(angles)
+        self.rosetta_energy_function_config()
         self.energy_function.update_ligand(self.get_dic_modified_atoms())
+
         energy = self.energy_function.evaluate_complex()
 
         if self.is_multi_objective:
@@ -134,21 +196,24 @@ class MolecularDockingProblem(Problem):
         phi = 0
         psi = 0
         omega = 0
+
+        float_list_0 = []
+        float_list_1 = []
+
         for key in self.start_branchs.keys():
-            vec_ref = np.array(
-                [list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[0] -
-                 list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[0],
-                 list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[1] -
-                 list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[1],
-                 list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[2] -
-                 list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[2]])
+            vecRef = np.array([list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[0] -
+                               list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[0],
+                               list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[1] -
+                               list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[1],
+                               list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[2] -
+                               list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[2]])
 
             angle = theta[key - 1]
             reference = self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]
 
             for i in range(self.start_branchs[key], self.end_branchs[key] + 1):
                 self.mod_pos_atoms[i] = self.translate_to_ref(self.mod_pos_atoms[i], reference, (0.0, 0.0, 0.0))[0]
-                self.mod_pos_atoms[i] = self.rotate_matrix_theta(angle, vec_ref, [self.mod_pos_atoms[i]])[0]
+                self.mod_pos_atoms[i] = self.rotate_matrix_theta(angle, vecRef, [self.mod_pos_atoms[i]])[0]
                 self.mod_pos_atoms[i] = self.translate_to_ref(self.mod_pos_atoms[i], (0.0, 0.0, 0.0), reference)[0]
 
     def translate_position(self, index):
@@ -234,3 +299,5 @@ class MolecularDockingProblem(Problem):
 
     def rosetta_energy_function_config(self):
         self.energy_function.partners = self.partners
+        self.energy_function.set_ligand_params("instances/" + self.docking_complex + "/ATX.params")
+        self.energy_function.load_pose()
