@@ -1,4 +1,5 @@
 from math import pi, sin, cos
+from problem.molecular_docking_energy import rosetta_energy_function
 
 import numpy as np
 import copy
@@ -13,12 +14,23 @@ class MolecularDockingProblem(Problem):
         super().__init__()
         print("Molecular Docking Problem")
 
+        self.ATOM_TAG = ["HETATM", "ATOM"]
+        self.BRANCH_TAG = "BRANCH"
+        self.ENDBRANCH_TAG = "ENDBRANCH"
+        self.END_TAG = "TORSDOF"
+
+        self.pdb_pattern = "{:6s}{:5d} {:<4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}    {" \
+                           ":5s}{:2s}{:2s} "
+
         self.box_bounds = np.empty(3)
         self.center_bounds = np.empty(3)
 
         self.vina_path = ""
         self.vina_config = ""
         self.docking_complex = ""
+
+        self.read_parameters()
+        self.read_vina_config_file()
 
         self.mod_pos_atoms = []
         self.content = []
@@ -32,9 +44,14 @@ class MolecularDockingProblem(Problem):
         self.index_ref = 0
         self.index_sec = 0
 
-        self.read_parameters()
+        self.atom_sec = None
+        self.atom_ref = None
+        self.partners = None
+
         self.get_bounds()
         self.is_multi_objective = False
+
+        self.energy_function = rosetta_energy_function.RosettaScoringFunction()
 
     def read_parameters(self):
         with open("docking_config.yaml", 'r') as stream:
@@ -70,6 +87,13 @@ class MolecularDockingProblem(Problem):
             elif buffer_line[0] == 'center_z':
                 self.center_bounds[2] = float(buffer_line[2])
 
+            elif buffer_line[0] == '#partners':
+                self.partners = buffer_line[2]
+            elif buffer_line[0] == '#ref':
+                self.atom_ref = buffer_line[2]
+            elif buffer_line[0] == '#sec':
+                self.atom_sec = buffer_line[2]
+
     def get_bounds(self):
         self.lb = np.zeros(self.dimensions)
         self.ub = np.zeros(self.dimensions)
@@ -83,12 +107,16 @@ class MolecularDockingProblem(Problem):
             self.ub[i] = pi
 
     def evaluate(self, angles):
+        energy = 0.0
+
         self.perform_docking(angles)
+        self.energy_function.update_ligand(self.get_dic_modified_atoms())
+        energy = self.energy_function.evaluate_complex()
 
         if self.is_multi_objective:
             energy = self.evaluate_mo(angles)
 
-        return float(9.99)
+        return energy
 
     def evaluate_mo(self, angles):
         intra_energy = 0.0
@@ -135,11 +163,12 @@ class MolecularDockingProblem(Problem):
         # keep the position of reference atom
         old_origin = self.mod_pos_atoms[self.index_ref]
         # translate matrix in order to put the coordinates of ref atom in 0 origin
-        self.mod_pos_atoms = self.translate_to_ref(self.mod_pos_atoms, self.mod_pos_atoms[self.index_ref], (0.0, 0.0, 0.0))
+        self.mod_pos_atoms = self.translate_to_ref(self.mod_pos_atoms, self.mod_pos_atoms[self.index_ref],
+                                                   (0.0, 0.0, 0.0))
         # build the ref vector
         vector_ref = [self.mod_pos_atoms[self.index_ref][0] - self.mod_pos_atoms[self.index_sec][0],
-                     self.mod_pos_atoms[self.index_ref][1] - self.mod_pos_atoms[self.index_sec][1],
-                     self.mod_pos_atoms[self.index_ref][2] - self.mod_pos_atoms[self.index_sec][2]]
+                      self.mod_pos_atoms[self.index_ref][1] - self.mod_pos_atoms[self.index_sec][1],
+                      self.mod_pos_atoms[self.index_ref][2] - self.mod_pos_atoms[self.index_sec][2]]
 
         self.mod_pos_atoms = self.rotate_matrix_theta(angle, vector_ref, self.mod_pos_atoms)
         self.mod_pos_atoms = self.translate_to_ref(self.mod_pos_atoms, self.mod_pos_atoms[self.index_ref], old_origin)
@@ -202,3 +231,6 @@ class MolecularDockingProblem(Problem):
             return vector
 
         return vector / norm
+
+    def rosetta_energy_function_config(self):
+        self.energy_function.partners = self.partners

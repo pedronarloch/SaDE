@@ -1,22 +1,24 @@
 # TODO list the objects used, avoiding the import of the whole lib
 
 import pyrosetta
+import copy
 
 
 # TODO Refactor the whole class due to architectural issues.
 class RosettaScoringFunction:
 
-    def __init__(self):
+    def __init__(self, complex):
         pyrosetta.init(extra_options='-mute all')
 
-        self.ligand_params = ""
-        self.pdb_file_name = ""
+        self.ligand_params = "instances/" + complex + "/ATX.params"
+        self.pdb_file_name = "instances/" + complex + ".pdb"
         self.partners = ""
         self.pose = None
         self.res_set = None
         self.dock_jump = None
         self.ligand_residue = None
         self.pos_atoms = {}
+        self.modified_atoms = None
 
         self.single_scorefxn = pyrosetta.get_fa_scorefxn()
         self.scorefxn = pyrosetta.create_score_function("ligand")
