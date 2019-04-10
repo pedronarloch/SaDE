@@ -26,6 +26,7 @@ class MolecularDockingProblem(Problem):
 
         self.box_bounds = np.empty(3)
         self.center_bounds = np.empty(3)
+        self.score_function_type = ""
 
         self.vina_path = ""
         self.vina_config = ""
@@ -55,13 +56,14 @@ class MolecularDockingProblem(Problem):
 
         self.energy_function = rosetta_energy_function.RosettaScoringFunction(self.docking_complex)
 
-        self.random_initial_dimensions = []
-
         self.read_ligand_file()
         self.original_pos_atoms = copy.copy(self.pos_atoms)
 
         self.get_bounds()
         self.is_multi_objective = False
+
+        self.random_initial_dimensions = []
+        self.randomize_ligand()
 
     def read_parameters(self):
         with open("docking_config.yaml", 'r') as stream:
@@ -154,16 +156,16 @@ class MolecularDockingProblem(Problem):
         self.num_branchs = len(self.index_branch)
         self.dimensions = 4 + self.num_branchs
 
-    # TODO confirmar quais são as restrições de translação, rotação e deformação dos ângulos diedrais possíveis
     def get_bounds(self):
         self.lb = np.zeros(self.dimensions)
         self.ub = np.zeros(self.dimensions)
 
-        #Translação + rotação
+        #Translação
         for i in range(0, 3):
             self.lb[i] = float(self.box_bounds[i] / 2) * (-1)
             self.ub[i] = float(self.box_bounds[i] / 2)
 
+        #Rotação, variando de -pi a pi
         for i in range(3, self.dimensions):
             self.lb[i] = -pi
             self.ub[i] = pi
@@ -172,10 +174,15 @@ class MolecularDockingProblem(Problem):
         energy = 0.0
 
         self.perform_docking(angles)
-        self.rosetta_energy_function_config()
-        self.energy_function.update_ligand(self.get_dic_modified_atoms())
 
-        energy = self.energy_function.evaluate_complex()
+
+        if self.score_function_type == "VINA":
+            print("hi")
+        else:
+            self.rosetta_energy_function_config()
+            self.energy_function.update_ligand(self.get_dic_modified_atoms())
+
+            energy = self.energy_function.evaluate_complex()
 
         if self.is_multi_objective:
             energy = self.evaluate_mo(angles)
@@ -308,4 +315,29 @@ class MolecularDockingProblem(Problem):
 
         self.random_initial_dimensions = copy.copy(random_ligand_position)
 
+    def dump_pdb(self):
+        self.energy_function.dump_ligand_pdb()
 
+    def write_ligand(self, path, file_format="pdbqt"):
+
+        new_pdb = open(path, 'w')
+        count_total = 1
+
+        for key in range(0, len(self.content)):
+            if self.content[key].get_tag() in self.ATOM_TAG:
+                new_pdb.write(self.pdb_pattern.format(self.content[key].get_tag(), self.content[key].get_serial(),
+                                                      self.content[key].get_atom(), self.content[key].locIndicator,
+                                                      self.content[key].residue, self.content[key].chainID,
+                                                      int(self.content[key].seqResidue), self.content[key].insResidue,
+                                                      float(self.mod_pos_atoms[count_total - 1][0]),
+                                                      float(self.mod_pos_atoms[count_total - 1][1]),
+                                                      float(self.mod_pos_atoms[count_total - 1][2]),
+                                                      float(self.content[key].occupancy),
+                                                      float(self.content[key].temperature), self.content[key].segmentID,
+                                                      self.content[key].symbol, self.content[key].chargeAtom) + "\n")
+                count_total += 1
+            else:
+                if file_format == "pdbqt":
+                    new_pdb.write(str(self.content[key].get_content()))
+
+        new_pdb.close()

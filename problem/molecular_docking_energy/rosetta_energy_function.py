@@ -58,4 +58,19 @@ class RosettaScoringFunction:
                 self.pose.residue(self.pose.total_residue()).set_xyz(self.ligand_residue.atom_index(key), vec)
 
     def evaluate_complex(self):
-        return self.scorefxn(self.pose)
+        score = self.scorefxn(self.pose)
+        print(score)
+        print('-------------')
+        print(self.scorefxn.show(self.pose))
+        print('-------------')
+        print(self.pose.energies().total_energy())
+        print('-------------')
+        print(self.pose.energies().total_energies())
+
+        sys.exit()
+
+        return score
+
+    def dump_ligand_pdb(self, name='instances/generic_name.pdb'):
+
+        self.pose.dump_pdb(name)
