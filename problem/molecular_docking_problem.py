@@ -1,10 +1,11 @@
 import copy
+import random
 from math import pi, sin, cos
-import sys
-from problem import atom
+
 import numpy as np
 import yaml
 
+from problem import atom
 from problem.generic_problem import Problem
 from problem.molecular_docking_energy import rosetta_energy_function
 
@@ -42,8 +43,8 @@ class MolecularDockingProblem(Problem):
         self.mod_pos_atoms = []
         self.content = []
         self.pos_atoms = []
-        self.branchs = {}
         self.num_branchs = 0
+        self.branchs = {}
         self.index_branch = {}
         self.start_branchs = {}
         self.end_branchs = {}
@@ -52,16 +53,15 @@ class MolecularDockingProblem(Problem):
         self.index_ref = 0
         self.index_sec = 0
 
-
         self.energy_function = rosetta_energy_function.RosettaScoringFunction(self.docking_complex)
+
+        self.random_initial_dimensions = []
 
         self.read_ligand_file()
         self.original_pos_atoms = copy.copy(self.pos_atoms)
 
         self.get_bounds()
         self.is_multi_objective = False
-
-        print("Init from Molecular Docking problem!")
 
     def read_parameters(self):
         with open("docking_config.yaml", 'r') as stream:
@@ -154,15 +154,17 @@ class MolecularDockingProblem(Problem):
         self.num_branchs = len(self.index_branch)
         self.dimensions = 4 + self.num_branchs
 
+    # TODO confirmar quais são as restrições de translação, rotação e deformação dos ângulos diedrais possíveis
     def get_bounds(self):
         self.lb = np.zeros(self.dimensions)
         self.ub = np.zeros(self.dimensions)
 
+        #Translação + rotação
         for i in range(0, 3):
             self.lb[i] = float(self.box_bounds[i] / 2) * (-1)
             self.ub[i] = float(self.box_bounds[i] / 2)
 
-        for i in range(3, 11):
+        for i in range(3, self.dimensions):
             self.lb[i] = -pi
             self.ub[i] = pi
 
@@ -193,13 +195,6 @@ class MolecularDockingProblem(Problem):
         self.translate_matrix([angles[0], angles[1], angles[2]])
 
     def rotate_dihedral_angles(self, theta):
-        phi = 0
-        psi = 0
-        omega = 0
-
-        float_list_0 = []
-        float_list_1 = []
-
         for key in self.start_branchs.keys():
             vecRef = np.array([list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][0]) - 1]))[0] -
                                list(map(float, self.mod_pos_atoms[self.translate_position(self.branchs[key][1]) - 1]))[0],
@@ -301,3 +296,16 @@ class MolecularDockingProblem(Problem):
         self.energy_function.partners = self.partners
         self.energy_function.set_ligand_params("instances/" + self.docking_complex + "/ATX.params")
         self.energy_function.load_pose()
+
+    def randomize_ligand(self, random_ligand_position=[]):
+
+        if len(random_ligand_position) == 0:
+            for i in range(self.dimensions):
+                random_ligand_position.append(random.uniform(self.lb[i], self.ub[i]))
+
+        self.evaluate(random_ligand_position)
+        self.pos_atoms = copy.copy(self.mod_pos_atoms)
+
+        self.random_initial_dimensions = copy.copy(random_ligand_position)
+
+

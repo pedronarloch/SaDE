@@ -19,6 +19,10 @@ class SADE(de.DifferentialEvolution):
         print('Self Adaptive Differential Evolution Instancied with Problem: ' + str(type(problem)))
         self.problem = problem
         self.read_parameters()
+
+        dtype = [('generation', int), ('rand', float), ('best', float), ('ctr', float), ('ctb', float), ('cta', float)]
+        self.prob_history = np.empty(self.MAX, dtype=dtype)
+
         for i in range(0, self.mutation_quantity):
             self.probs[i] = 1 / self.mutation_quantity
 
@@ -34,6 +38,20 @@ class SADE(de.DifferentialEvolution):
 
             except yaml.YAMLError as exc:
                 print(exc)
+
+    def dump(self):
+        super().dump()
+        self.CRm = 0.5  # Crossover memory
+        self.CRs = []
+        self.ns = np.zeros(self.mutation_quantity)  # sucessfull rating
+        self.nf = np.zeros(self.mutation_quantity)  # fails rating
+        self.probs = np.zeros(self.mutation_quantity)  # probabilities
+
+        for i in range(0, self.mutation_quantity):
+            self.probs[i] = 1 / self.mutation_quantity
+
+        dtype = [('generation', int), ('rand', float), ('best', float), ('ctr', float), ('ctb', float), ('cta', float)]
+        self.prob_history = np.empty(self.MAX, dtype=dtype)
 
     def learning_process(self):
         acum_prob = 0
@@ -122,6 +140,7 @@ class SADE(de.DifferentialEvolution):
         for i in range(0, self.MAX):
             self.best_ind[i] = self.population[self.get_best_individual()]
             self.diversity[i] = self.update_diversity()
+            self.prob_history[i] = (i, self.probs[0], self.probs[1], self.probs[2], self.probs[3], self.probs[4])
 
             if i % 25 == 0 and i > 0:
                 try:
@@ -196,3 +215,17 @@ class SADE(de.DifferentialEvolution):
         else:
             self.offspring[j] = copy.copy(self.population[j])
             return False
+
+    def export_probabilities_history(self, file_path):
+        f = open(file_path + 'prob_history', 'w')
+
+        f.write('generation\trand\tbest\tctr\tctb\tcta\n')
+
+        for probabilities in self.prob_history:
+            f.write(str(probabilities[0]) + "\t")
+            f.write(str(probabilities[1]) + "\t")
+            f.write(str(probabilities[2]) + "\t")
+            f.write(str(probabilities[3]) + "\t")
+            f.write(str(probabilities[4]) + "\t")
+            f.write(str(probabilities[5]) + "\n")
+        f.close()

@@ -1,6 +1,7 @@
 # TODO list the objects used, avoiding the import of the whole lib
 
 import pyrosetta
+import sys
 
 
 # TODO Refactor the whole class due to architectural issues.
@@ -45,16 +46,13 @@ class RosettaScoringFunction:
 
         for atom in range(self.ligand_residue.natoms()):
             coord = self.ligand_residue.xyz(atom + 1)
-            atom_name = self.ligand_residue.atom_name(atom+1).split()[0].encode('ascii', 'ignore')
+            atom_name = self.ligand_residue.atom_name(atom+1).split()[0]#.encode('ascii', 'ignore')
             self.pos_atoms[atom_name] = coord
 
     def update_ligand(self, dic):
         self.pose.energies().clear()
 
         if dic is not None:
-            key_list = list(self.pos_atoms.keys())
-            print(key_list)
-
             for key in self.pos_atoms:
                 vec = pyrosetta.rosetta.numeric.xyzVector_double_t(dic[key][0], dic[key][1], dic[key][2])
                 self.pose.residue(self.pose.total_residue()).set_xyz(self.ligand_residue.atom_index(key), vec)
