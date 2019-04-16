@@ -1,7 +1,8 @@
 import copy
 import random
 from math import pi, sin, cos
-
+from subprocess import getstatusoutput
+import sys
 import numpy as np
 import yaml
 
@@ -26,7 +27,7 @@ class MolecularDockingProblem(Problem):
 
         self.box_bounds = np.empty(3)
         self.center_bounds = np.empty(3)
-        self.score_function_type = ""
+        self.score_function_type = "VINA"
 
         self.vina_path = ""
         self.vina_config = ""
@@ -177,7 +178,11 @@ class MolecularDockingProblem(Problem):
 
 
         if self.score_function_type == "VINA":
-            print("hi")
+            self.write_ligand('instances/'+self.docking_complex+'/')
+            a = getstatusoutput(self.vina_path + ' --config instances/' + self.docking_complex +"/"+self.vina_config + ' --score_only')
+            print(a)
+            sys.exit()
+
         else:
             self.rosetta_energy_function_config()
             self.energy_function.update_ligand(self.get_dic_modified_atoms())
@@ -320,7 +325,7 @@ class MolecularDockingProblem(Problem):
 
     def write_ligand(self, path, file_format="pdbqt"):
 
-        new_pdb = open(path, 'w')
+        new_pdb = open(path + '/modified/ligand.pdbqt', 'w')
         count_total = 1
 
         for key in range(0, len(self.content)):

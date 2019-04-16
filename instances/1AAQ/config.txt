@@ -1,5 +1,5 @@
 receptor = instances/1AAQ/macro.pdbqt
-ligand = ligand.pdbqt
+ligand = instances/1AAQ/modified/ligand.pdbqt
 center_x = -9.926
 center_y = 17.871
 center_z = 1.167
