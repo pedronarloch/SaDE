@@ -1,19 +1,20 @@
 import copy
 import math
-import sys
-import numpy as np
 import random
+
+import numpy as np
+
 import differential_evolution_ufrgs as de
 from individual import MultiObjectiveIndividual
 
 
 class DEMO(de.DifferentialEvolution):
-    temp_offspring = None
 
     def __init__(self, problem):
         print('Differential Evolution Multi Objective Instantied')
         super().__init__(problem)
-        self.temp_offspring = []
+
+        self.pool_of_solutions = []
         self.problem.is_multi_objective = True
 
     def init_population(self):
@@ -65,7 +66,7 @@ class DEMO(de.DifferentialEvolution):
 
     def non_dominated_sorting(self):
         rank = 0
-        non_ranked = np.array(self.population)
+        non_ranked = np.array(self.pool_of_solutions)
 
         while non_ranked.size != 0:
 
@@ -85,8 +86,6 @@ class DEMO(de.DifferentialEvolution):
             non_ranked = non_ranked[np.invert(pareto_efficiency)]
             rank += 1
 
-        return self.population
-
     def calculate_crowding_distance(self):
         '''
         The comparison must be done accordingly to the individuals rank in pareto-front.
@@ -101,32 +100,32 @@ class DEMO(de.DifferentialEvolution):
         while curr_rank <= last_rank:
 
             values.clear()
-            for i in range(0, len(self.population)):
-                if self.population[i].rank == curr_rank:
-                    values.append((i, self.population[i].fitness[0], self.population[i].fitness[1]))
+            for i in range(0, len(self.pool_of_solutions)):
+                if self.pool_of_solutions[i].rank == curr_rank:
+                    values.append((i, self.pool_of_solutions[i].fitness[0], self.pool_of_solutions[i].fitness[1]))
 
             str_arr = np.array(values, dtype=dtype)  # Structured Array based on individual information
 
             arr = np.sort(str_arr, order='objective_1')
 
             # In crowding distance, boundaries must have its distance set to Infinite.
-            self.population[arr[0]['index']].crowding_distance = math.inf
-            self.population[arr[-1]['index']].crowding_distance = math.inf
+            self.pool_of_solutions[arr[0]['index']].crowding_distance = math.inf
+            self.pool_of_solutions[arr[-1]['index']].crowding_distance = math.inf
 
             for i in range(1, len(arr) - 1):
                 distance = (arr[i + 1]['objective_1'] - arr[i - 1]['objective_1']) / \
                            (arr[-1]['objective_1'] - arr[0]['objective_1'])
 
-                self.population[arr[i]['index']].crowding_distance = distance
+                self.pool_of_solutions[arr[i]['index']].crowding_distance = distance
 
             arr = np.sort(str_arr, order="objective_2")
-            self.population[arr[0]['index']].crowding_distance = math.inf
-            self.population[arr[-1]['index']].crowding_distance = math.inf
+            self.pool_of_solutions[arr[0]['index']].crowding_distance = math.inf
+            self.pool_of_solutions[arr[-1]['index']].crowding_distance = math.inf
 
             for i in range(1, len(arr) - 1):
                 distance = (arr[i + 1]['objective_2'] - arr[i - 1]['objective_2']) / \
                            (arr[-1]['objective_2'] - arr[0]['objective_2'])
-                self.population[arr[i]['index']].crowding_distance += distance
+                self.pool_of_solutions[arr[i]['index']].crowding_distance += distance
 
             curr_rank += 1
 
@@ -140,6 +139,7 @@ class DEMO(de.DifferentialEvolution):
 
         return rank
 
+    # TODO Talvez a modificação deva ser feita aqui, atualizando o Pool of Individuals
     def generational_operator(self, gen_trial, pop_index):
 
         costs = np.array((gen_trial.fitness, self.population[pop_index].fitness))
@@ -148,23 +148,23 @@ class DEMO(de.DifferentialEvolution):
         pareto_efficiency = self.is_pareto_efficient(costs)
 
         if pareto_efficiency[0] and pareto_efficiency[1]:  # Both solutions are in the optimal front (non-dominance)
-            self.temp_offspring.append(self.population[pop_index])
-            self.temp_offspring.append(gen_trial)
+            self.pool_of_solutions.append(self.population[pop_index])
+            self.pool_of_solutions.append(copy.deepcopy(gen_trial))
         elif pareto_efficiency[0] and not pareto_efficiency[1]:  # Offspring dominates parent
-            self.temp_offspring.append(copy.deepcopy(gen_trial))
-        elif not pareto_efficiency[0] and pareto_efficiency[1]:  # Parents dominates offspring
-            self.temp_offspring.append(self.population[pop_index])
+            self.pool_of_solutions.append(gen_trial)
+        elif not pareto_efficiency[0] and pareto_efficiency[1]:  # Parent dominates offspring
+            self.pool_of_solutions.append(self.population[pop_index])
         else:  # Non-dominance (optimal front)
-            self.temp_offspring.append(self.population[pop_index])
-            self.temp_offspring.append(gen_trial)
+            self.pool_of_solutions.append(self.population[pop_index])
+            self.pool_of_solutions.append(gen_trial)
 
     def truncate_offspring(self):
 
         dtype = [('index', int), ('rank', float), ('crowding_distance', float)]
         values = []
 
-        for i in range(0, len(self.temp_offspring)):
-            values.append((i, self.temp_offspring[i].rank, self.temp_offspring[i].crowding_distance))
+        for i in range(0, len(self.pool_of_solutions)):
+            values.append((i, self.pool_of_solutions[i].rank, self.pool_of_solutions[i].crowding_distance))
 
         str_arr = np.array(values, dtype=dtype)
         str_arr = np.sort(str_arr, order="rank")
@@ -200,11 +200,15 @@ class DEMO(de.DifferentialEvolution):
 
             rank_count += 1
 
-        for index, element in enumerate(aux_offspring):
-            self.offspring[index] = copy.deepcopy(self.population[element['index']])
+        for i, sol in enumerate(aux_offspring):
+            self.population[i] = copy.deepcopy(self.pool_of_solutions[sol['index']])
 
     # TODO It is necessary to modify the operator in order to consider individuals from the population AND offspring
     def rand_1_bin(self, j, trial_individual):
+
+        arr1 = np.array(self.new_individuals)
+
+        pool = np.concatenate((self.population, arr1))
 
         while 1:
             r1 = self.selection_operator()
@@ -224,9 +228,9 @@ class DEMO(de.DifferentialEvolution):
         jRand = random.randint(0, self.problem.dimensions - 1)
 
         trial = trial_individual.dimensions
-        r1_dimensions = self.population[r1].dimensions
-        r2_dimensions = self.population[r2].dimensions
-        r3_dimensions = self.population[r3].dimensions
+        r1_dimensions = pool[r1].dimensions
+        r2_dimensions = pool[r2].dimensions
+        r3_dimensions = pool[r3].dimensions
 
         for d in range(0, self.problem.dimensions):
             if random.random() <= self.CR or d == jRand:
@@ -236,6 +240,10 @@ class DEMO(de.DifferentialEvolution):
 
         return trial
 
+    def selection_operator(self):
+        solution_pool = len(self.new_individuals) + len(self.population)
+        return random.randint(0, solution_pool)
+
     def optimize(self, i_pop=None):
         if i_pop is None:
             self.init_population()
@@ -243,33 +251,26 @@ class DEMO(de.DifferentialEvolution):
             self.population = i_pop
 
         for i in range(0, self.MAX):
-            # self.best_ind[i] = self.population[self.get_best_individual()]
-            # self.diversity[i] = self.update_diversity()
-
-            if i % 5 == 0:
-                print("Generation: ", i, "Population Size: ", len(self.population))
 
             for j in range(0, self.NP):
+
                 trial = copy.deepcopy(self.population[j])
 
                 self.rand_1_bin(j, trial)
 
-                fitness_vals = self.problem.evaluate(trial.dimensions)
+                fitness_values = self.problem.evaluate(trial.dimensions)
 
-                trial.fitness[0] = fitness_vals[0]
-                trial.fitness[1] = fitness_vals[1]
+                trial.fitness[0] = fitness_values[0]
+                trial.fitness[1] = fitness_values[1]
 
                 self.generational_operator(trial, j)
 
-            print(len(self.temp_offspring))
-            sys.exit()
+            # TODO Corrigir concatenando os indivíduos corretos
+            if len(self.new_individuals) > 0:
+                self.pool_of_solutions = np.concatenate((self.old_individuals, self.new_individuals))
+            else:
+                self.pool_of_solutions = self.population
 
             self.non_dominated_sorting()
             self.calculate_crowding_distance()
             self.truncate_offspring()
-
-            self.population = np.empty(self.NP, object)
-            self.population = np.copy(self.offspring)
-            self.offspring = np.empty(self.NP, object)
-
-        return None

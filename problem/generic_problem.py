@@ -23,8 +23,8 @@ class CEC(Problem):
 	def __init__(self):
 		super().__init__()
 		print("Class CEC Instantied!")
-		self.readParameters()
-		self.getBounds()
+		self.read_parameters()
+		self.get_bounds()
 
 	def check_bounds(self, trial):
 		for i in range(0, len(trial)):

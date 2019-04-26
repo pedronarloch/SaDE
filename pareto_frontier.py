@@ -21,7 +21,7 @@ def is_pareto_efficient_dumb(costs):
 if __name__ == '__main__':
 
     population = np.empty(12, object)
-    demo = differential_evolution_multi_objective.DEMO()
+    demo = differential_evolution_multi_objective.DEMO(None)
     demo.NP = 8
     demo.dump()
 
