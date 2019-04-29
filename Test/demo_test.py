@@ -4,7 +4,7 @@ from individual import MultiObjectiveIndividual
 from differential_evolution_multi_objective import DEMO
 from problem.generic_problem import Problem
 from math import inf
-
+import copy
 
 class TestDEMO:
 
@@ -13,6 +13,7 @@ class TestDEMO:
         population = np.empty(12, object)
         for i in range(0, 12):
             population[i] = MultiObjectiveIndividual(i, 2, 2)
+            population[i].dimensions = [1, 1, 1]
 
         population[0].fitness = np.array([4, 2])
         population[1].fitness = np.array([3, 3])
@@ -35,7 +36,7 @@ class TestDEMO:
 
     @pytest.fixture
     def differential_evolution(self, problem, solution_set):
-
+        problem.dimensions = 3
         de = DEMO(problem)
         de.NP = 12
         de.CR = 1
@@ -72,12 +73,7 @@ class TestDEMO:
 
         differential_evolution.generational_operator(child, -1)
 
-        with pytest.raises(IndexError) as e_info:  # In this case, the child must be dropped
-            differential_evolution.new_individuals[0]
-
-        print(" Exception Obtained: ", e_info)
-
-        assert np.array_equal(differential_evolution.old_individuals[0].fitness, differential_evolution.population[-1].fitness)
+        assert np.array_equal(differential_evolution.pool_of_solutions[0].fitness, solution_set[-1].fitness)
 
     def test_generational_operator_none_optimal(self, differential_evolution, solution_set):
 
@@ -86,11 +82,12 @@ class TestDEMO:
 
         differential_evolution.generational_operator(child, 1)
 
-        assert np.array_equal(differential_evolution.old_individuals[0].fitness, parent.fitness)
-        assert np.array_equal(differential_evolution.new_individuals[0].fitness, child.fitness)
+        assert np.array_equal(differential_evolution.pool_of_solutions[0].fitness, parent.fitness)
+        assert np.array_equal(differential_evolution.pool_of_solutions[1].fitness, child.fitness)
 
     def test_non_dominated_sorting(self, differential_evolution):
-        differential_evolution.non_dominated_sorting(differential_evolution.population)
+        differential_evolution.pool_of_solutions = differential_evolution.population
+        differential_evolution.non_dominated_sorting()
 
         correct_ranks = [2, 2, 2, 3, 3, 4, 1, 0, 0, 0, 0, 0]
         de_ranks = []
@@ -124,8 +121,6 @@ class TestDEMO:
         for i, sol in enumerate(solution_set[-5:]):
             differential_evolution.generational_operator(sol, i)
 
-        differential_evolution.pool_of_solutions = np.concatenate((differential_evolution.old_individuals, differential_evolution.new_individuals))
-
         differential_evolution.non_dominated_sorting()
         differential_evolution.calculate_crowding_distance()
 
@@ -133,16 +128,77 @@ class TestDEMO:
 
         assert len(differential_evolution.population) == differential_evolution.NP
 
-        final_population = np.empty(differential_evolution.NP, dtype=np.ndarray)
-
         for i, solution in enumerate(differential_evolution.population):
             assert np.array_equal(solution.fitness, solution_set[7 + i].fitness)
 
-    def test_truncate_offspring_general(self, differential_evolution, solution_set):
+    def test_truncate_offspring_add_all(self, differential_evolution, solution_set):
 
-        return None
+        differential_evolution.pool_of_solutions = differential_evolution.population
+        differential_evolution.non_dominated_sorting()
+        differential_evolution.calculate_crowding_distance()
 
+        differential_evolution.truncate_offspring()
 
-    def test_rand_1_bin(self, differential_evolution, solution_set):
-        return None
+        dtype = [('index', int), ('rank', int), ('fitness', np.ndarray)]
+        values = []
+        values_set = []
 
+        assert len(differential_evolution.population) == differential_evolution.NP
+
+        for i, solution in enumerate(differential_evolution.population):
+            values.append((i, solution.rank, solution.fitness))
+
+        for i, sol in enumerate(solution_set):
+            values_set.append((i, sol.rank, sol.fitness))
+
+        str_arr = np.array(values, dtype=dtype)
+        str_arr = np.sort(str_arr, order="rank")
+
+        str_arr_aux = np.array(values, dtype=dtype)
+        str_arr_aux = np.sort(str_arr_aux, order="rank")
+
+        assert np.array_equal(str_arr, str_arr_aux)
+
+    def test_truncate_offspring_different_ranks(self, differential_evolution, solution_set):
+        differential_evolution.NP = 9
+        differential_evolution.population = solution_set[:9]
+        differential_evolution.pool_of_solutions = solution_set
+
+        differential_evolution.non_dominated_sorting()
+        differential_evolution.calculate_crowding_distance()
+        differential_evolution.truncate_offspring()
+
+        dtype = [('index', int), ('rank', int), ('fitness', np.ndarray)]
+        values = []
+        values_set = []
+
+        assert len(differential_evolution.population) == differential_evolution.NP
+
+        for i, solution in enumerate(differential_evolution.population):
+            values.append((i, solution.rank, solution.fitness))
+
+        for i, sol in enumerate(solution_set[:3]):
+            values_set.append((i, sol.rank, sol.fitness))
+
+        for i, sol in enumerate(solution_set[6:]):
+            values_set.append((i, sol.rank, sol.fitness))
+
+        str_arr = np.array(values, dtype=dtype)
+        str_arr = np.sort(str_arr, order="rank")
+
+        str_arr_aux = np.array(values, dtype=dtype)
+        str_arr_aux = np.sort(str_arr_aux, order="rank")
+
+        assert np.array_equal(str_arr, str_arr_aux)
+
+    def test_rand_1_bin_3_individuals(self, differential_evolution, solution_set):
+        differential_evolution.NP = 1
+        differential_evolution.population = np.empty(1, object)
+        differential_evolution.population[0] = solution_set[-1]
+        differential_evolution.pool_of_solutions = solution_set[8:]
+        differential_evolution.new_individuals = solution_set[8:11]
+
+        trial = differential_evolution.rand_1_bin(0, solution_set[-1])
+
+        for i in range(0, differential_evolution.problem.dimensions):
+            assert trial[i] == 1

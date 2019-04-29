@@ -15,6 +15,10 @@ class Problem(object):
 	def __init__(self):
 		print("Class Problem Instantied!")
 
+	def check_bounds(self, trial):
+
+		return True
+
 
 class CEC(Problem):
 	problem = ""
