@@ -1,7 +1,7 @@
 import copy
 import math
 import random
-import sys
+
 import numpy as np
 
 import differential_evolution_ufrgs as de
@@ -23,8 +23,8 @@ class DEMO(de.DifferentialEvolution):
         self.population = np.empty(self.NP, object)
 
         for i in range(0, self.NP):
-            ind = MultiObjectiveIndividual(i, self.problem.dimensions, 2)
-            ind.size = self.problem.dimensions
+            ind = MultiObjectiveIndividual(i, self.problem.dimensionality, self.problem.get_num_objectives())
+            ind.size = self.problem.dimensionality
             ind.rand_gen(self.problem.lb, self.problem.ub)
 
             fitness_value = self.problem.evaluate(ind.dimensions)
@@ -40,7 +40,7 @@ class DEMO(de.DifferentialEvolution):
         self.population = np.empty(self.NP, object)
 
         for i in range(0, self.NP):
-            ind = MultiObjectiveIndividual(i, self.problem.dimensions, 2)
+            ind = MultiObjectiveIndividual(i, self.problem.dimensionality)
             ind.dimensions = np.copy(self.problem.generate_apl_individual())
 
             fitness_value = self.problem.evaluate(ind.dimensions)
@@ -226,14 +226,14 @@ class DEMO(de.DifferentialEvolution):
             if r3 != r2 and r3 != r1 and r3 != j:
                 break
 
-        jRand = random.randint(0, self.problem.dimensions - 1)
+        jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
         r1_dimensions = pool[r1].dimensions
         r2_dimensions = pool[r2].dimensions
         r3_dimensions = pool[r3].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r1_dimensions[d] + (self.F * (r2_dimensions[d] - r3_dimensions[d]))
 
@@ -254,6 +254,8 @@ class DEMO(de.DifferentialEvolution):
 
         for i in range(0, self.MAX):
 
+
+
             for j in range(0, self.NP):
 
                 trial = copy.deepcopy(self.population[j])
@@ -270,3 +272,8 @@ class DEMO(de.DifferentialEvolution):
             self.non_dominated_sorting()
             self.calculate_crowding_distance()
             self.truncate_offspring()
+
+        for i, solution in enumerate(self.population):
+            print(i, self.population[i].fitness, self.population[i].dimensions)
+
+        return True

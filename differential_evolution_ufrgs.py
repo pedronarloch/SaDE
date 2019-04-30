@@ -67,8 +67,8 @@ class DifferentialEvolution:
         self.population = np.empty(self.NP, object)
 
         for i in range(0, self.NP):
-            ind = individual.Individual(i, self.problem.dimensions)
-            ind.size = self.problem.dimensions
+            ind = individual.Individual(i, self.problem.dimensionality)
+            ind.size = self.problem.dimensionality
             ind.rand_gen(self.problem.lb, self.problem.ub)
             ind.fitness = self.problem.evaluate(ind.dimensions)
 
@@ -81,7 +81,7 @@ class DifferentialEvolution:
         self.population = np.empty(self.NP, object)
 
         for i in range(0, self.NP):
-            ind = individual.Individual(i, self.problem.dimensions)
+            ind = individual.Individual(i, self.problem.dimensionality)
             ind.dimensions = np.copy(self.problem.generate_apl_individual())
             ind.fitness = self.problem.evaluate(ind.dimensions)
             ind.ind_id = i
@@ -107,13 +107,13 @@ class DifferentialEvolution:
             if r2 != j and r2 != r1:
                 break
 
-        jRand = random.randint(0, self.problem.dimensions - 1)
+        jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
         r1_dimensions = self.population[r1].dimensions
         r2_dimensions = self.population[r2].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = best_dimensions[d] + (self.F * (r1_dimensions[d] - r2_dimensions[d]))
 
@@ -135,7 +135,7 @@ class DifferentialEvolution:
             if r3 != j and r3 != r2 and r3 != r1:
                 break
 
-        jRand = random.randint(0, self.problem.dimensions - 1)
+        jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
 
@@ -144,7 +144,7 @@ class DifferentialEvolution:
         r2_dimensions = self.population[r2].dimensions
         r3_dimensions = self.population[r3].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r_curr[d] + (self.F * (r1_dimensions[d] - r_curr[d])) + (
                         self.F * (r2_dimensions[d] - r3_dimensions[d]))
@@ -164,7 +164,7 @@ class DifferentialEvolution:
             if r3 != j and r3 != r2:
                 break
 
-        jRand = random.randint(0, self.problem.dimensions - 1)
+        jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
 
@@ -173,7 +173,7 @@ class DifferentialEvolution:
         r2_dimensions = self.population[r2].dimensions
         r3_dimensions = self.population[r3].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r_curr[d] + (self.F * (r1_dimensions[d] - r_curr[d])) + (
                             self.F * (r2_dimensions[d] - r3_dimensions[d]))
@@ -195,13 +195,13 @@ class DifferentialEvolution:
             if r2 != r1 and r2 != j:
                 break
 
-        jRand = random.randint(0, self.problem.dimensions - 1)
+        jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
         r1_dimensions = self.population[r1].dimensions
         r2_dimensions = self.population[r2].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = trial[d] + (self.F * (r1_dimensions[d] - r2_dimensions[d])) + (
                         self.F * (best_dimensions[d] - trial[d]))
@@ -232,7 +232,7 @@ class DifferentialEvolution:
         r2_dimensions = self.population[r2].dimensions
         r3_dimensions = self.population[r3].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r1_dimensions[d] + (self.F * (r2_dimensions[d] - r3_dimensions[d])) + (
                         self.F * (best_dimensions[d] - r1_dimensions[d]))
@@ -258,14 +258,14 @@ class DifferentialEvolution:
             if r3 != r2 and r3 != r1 and r3 != j:
                 break
 
-        jRand = random.randint(0, self.problem.dimensions - 1)
+        jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
         r1_dimensions = self.population[r1].dimensions
         r2_dimensions = self.population[r2].dimensions
         r3_dimensions = self.population[r3].dimensions
 
-        for d in range(0, self.problem.dimensions):
+        for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
                 trial[d] = r1_dimensions[d] + (self.F * (r2_dimensions[d] - r3_dimensions[d]))
 
@@ -296,11 +296,11 @@ class DifferentialEvolution:
                 ind_a = self.population[self.get_index_by_id(a)].dimensions
                 ind_b = self.population[self.get_index_by_id(i)].dimensions
 
-                for d in range(0, self.problem.dimensions):
+                for d in range(0, self.problem.dimensionality):
                     aux_1 = aux_1 + (pow(ind_a[d] - ind_b[d], 2).real)
 
                 aux_1 = (math.sqrt(aux_1).real)
-                aux_1 = (1 / self.problem.dimensions) * aux_1
+                aux_1 = (1 / self.problem.dimensionality) * aux_1
                 aux_1 = aux_1.real
 
                 if b == i or aux_2 > aux_1:
@@ -318,8 +318,8 @@ class DifferentialEvolution:
             random.seed(self.seed)
 
         if i_pop is None:
-            # self.init_population();
-            self.init_population_by_apl()
+            self.init_population()
+            #self.init_population_by_apl()
             self.offspring = np.empty(self.NP, object)
         else:
             self.population = i_pop

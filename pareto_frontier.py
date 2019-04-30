@@ -26,7 +26,7 @@ if __name__ == '__main__':
     demo.dump()
 
     for i in range(0, 12):
-        population[i] = MultiObjectiveIndividual(i, 2, 2)
+        population[i] = MultiObjectiveIndividual(i, 2)
 
     population[0].fitness = np.array([4, 2])
     population[1].fitness = np.array([3, 3])

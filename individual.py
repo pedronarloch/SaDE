@@ -5,10 +5,6 @@ import numpy as np
 
 
 class Individual(object):
-	dimensions = []
-	fitness = 0.0
-	ind_id = 0
-	size = 0
 
 	def __init__(self, ind_id, dimensionality):
 		self.size = dimensionality

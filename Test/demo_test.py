@@ -12,7 +12,7 @@ class TestDEMO:
     def solution_set(self):
         population = np.empty(12, object)
         for i in range(0, 12):
-            population[i] = MultiObjectiveIndividual(i, 2, 2)
+            population[i] = MultiObjectiveIndividual(i, 2)
             population[i].dimensions = [1, 1, 1]
 
         population[0].fitness = np.array([4, 2])
