@@ -32,7 +32,8 @@ class BenchmarkProblem(Problem):
 
     def set_problem_object(self):
         if self.class_type == 'zdt':
-            self.problem_object = pygmo.problem(self.problem_class(self.problem_id, self.dimensionality))
+            self.problem_class = self.problem_class(self.problem_id, self.dimensionality)
+            self.problem_object = pygmo.problem(self.problem_class)
         else:
             self.problem_object = pygmo.problem(self.problem_class(dim=self.dimensionality))
 
@@ -50,5 +51,5 @@ class BenchmarkProblem(Problem):
     def get_num_objectives(self):
         return self.problem_object.get_nobj()
 
-    def get_p_distance(self, trial):
-        return self.problem_object.p_distance(trial)
+    def return_p_distance(self, trial):
+        return self.problem_class.p_distance(trial)

@@ -17,7 +17,7 @@ class Problem(object):
         return None
 
     def check_bounds(self, trial):
-        for i, value in trial:
+        for i, value in enumerate(trial):
             if trial[i] < self.lb[i]:
                 trial[i] = random.uniform(self.lb[i], self.ub[i])
             elif trial[i] > self.ub[i]:

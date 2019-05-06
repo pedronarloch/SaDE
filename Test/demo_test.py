@@ -1,10 +1,12 @@
-import pytest
-import numpy as np
-from individual import MultiObjectiveIndividual
-from differential_evolution_multi_objective import DEMO
-from problem.generic_problem import Problem
 from math import inf
-import copy
+
+import numpy as np
+import pytest
+
+from differential_evolution_multi_objective import DEMO
+from individual import MultiObjectiveIndividual
+from problem.generic_problem import Problem
+
 
 class TestDEMO:
 
@@ -12,7 +14,7 @@ class TestDEMO:
     def solution_set(self):
         population = np.empty(12, object)
         for i in range(0, 12):
-            population[i] = MultiObjectiveIndividual(i, 2)
+            population[i] = MultiObjectiveIndividual(i, 2, 2)
             population[i].dimensions = [1, 1, 1]
 
         population[0].fitness = np.array([4, 2])
@@ -32,11 +34,14 @@ class TestDEMO:
 
     @pytest.fixture
     def problem(self):
-        return Problem()
+        problem = Problem()
+        problem.ub = [1, 1, 1]
+        problem.lb = [1, 1, 1]
+        return problem
 
     @pytest.fixture
     def differential_evolution(self, problem, solution_set):
-        problem.dimensions = 3
+        problem.dimensionality = 3
         de = DEMO(problem)
         de.NP = 12
         de.CR = 1
@@ -47,39 +52,41 @@ class TestDEMO:
 
         return de
 
-    def test_generational_operator_both_optimal(self, differential_evolution, solution_set):
-
+    def test_generational_operator_non_dominance(self, differential_evolution, solution_set):
         child = solution_set[-1]  # Fitness: [-3.5, -3.5]
         parent = solution_set[-2]  # Fitness: [-5.0, -2.0]
 
+        differential_evolution.pool_of_solutions.append(parent)
         differential_evolution.generational_operator(child, len(solution_set) - 2)
 
         assert np.array_equal(differential_evolution.pool_of_solutions[0].fitness, parent.fitness)
         assert np.array_equal(differential_evolution.pool_of_solutions[1].fitness, child.fitness)
 
-    def test_generational_operator_child_optimal(self, differential_evolution, solution_set):
+    def test_generational_operator_child_dominance(self, differential_evolution, solution_set):
 
         child = solution_set[-1]  # Fitness: [-3.5, -3.5]
-
+        parent = solution_set[0]
+        differential_evolution.pool_of_solutions.append(parent)
         differential_evolution.generational_operator(child, 0)  # Parent Fitness: [4, 2]
 
         assert len(differential_evolution.pool_of_solutions) == 1
         assert not np.array_equal(differential_evolution.pool_of_solutions[0].fitness, solution_set[0].fitness)
         assert np.array_equal(differential_evolution.pool_of_solutions[0].fitness, child.fitness)
 
-    def test_generational_operator_parent_optimal(self, differential_evolution, solution_set):
+    def test_generational_operator_parent_dominance(self, differential_evolution, solution_set):
 
         child = solution_set[0]  # Fitness: [4, 2]
-
+        parent = solution_set[-1]
+        differential_evolution.pool_of_solutions.append(parent)
         differential_evolution.generational_operator(child, -1)
 
         assert np.array_equal(differential_evolution.pool_of_solutions[0].fitness, solution_set[-1].fitness)
 
-    def test_generational_operator_none_optimal(self, differential_evolution, solution_set):
+    def test_generational_operator_non_dominance_equals(self, differential_evolution, solution_set):
 
         child = solution_set[1]  # Fitness [3,3]
         parent = solution_set[1]  # Fitness [3,3]
-
+        differential_evolution.pool_of_solutions.append(parent)
         differential_evolution.generational_operator(child, 1)
 
         assert np.array_equal(differential_evolution.pool_of_solutions[0].fitness, parent.fitness)
@@ -117,6 +124,7 @@ class TestDEMO:
 
         differential_evolution.NP = 5
         differential_evolution.population = solution_set[:5]
+        differential_evolution.pool_of_solutions = list(differential_evolution.population)
 
         for i, sol in enumerate(solution_set[-5:]):
             differential_evolution.generational_operator(sol, i)
@@ -162,6 +170,7 @@ class TestDEMO:
     def test_truncate_offspring_different_ranks(self, differential_evolution, solution_set):
         differential_evolution.NP = 9
         differential_evolution.population = solution_set[:9]
+
         differential_evolution.pool_of_solutions = solution_set
 
         differential_evolution.non_dominated_sorting()
@@ -190,15 +199,3 @@ class TestDEMO:
         str_arr_aux = np.sort(str_arr_aux, order="rank")
 
         assert np.array_equal(str_arr, str_arr_aux)
-
-    def test_rand_1_bin_3_individuals(self, differential_evolution, solution_set):
-        differential_evolution.NP = 1
-        differential_evolution.population = np.empty(1, object)
-        differential_evolution.population[0] = solution_set[-1]
-        differential_evolution.pool_of_solutions = solution_set[8:]
-        differential_evolution.new_individuals = solution_set[8:11]
-
-        trial = differential_evolution.rand_1_bin(0, solution_set[-1])
-
-        for i in range(0, differential_evolution.problem.dimensions):
-            assert trial[i] == 1

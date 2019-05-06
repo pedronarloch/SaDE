@@ -1,6 +1,7 @@
 import copy
 import math
 import random
+import pygmo
 
 import numpy as np
 
@@ -17,6 +18,11 @@ class DEMO(de.DifferentialEvolution):
         self.pool_of_solutions = []
         self.new_individuals = []
         self.problem.is_multi_objective = True
+
+    def dump(self):
+        super().dump()
+        self.pool_of_solutions = []
+        self.new_individuals = []
 
     def init_population(self):
         print("Initializing a Random Population")
@@ -53,39 +59,16 @@ class DEMO(de.DifferentialEvolution):
 
         self.initial_population = copy.deepcopy(self.population)
 
-    def is_pareto_efficient(self, costs):
-        """
-        Find the pareto-efficient points
-        :param costs: An (n_points, n_costs) array
-        :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
-        """
-        is_efficient = np.ones(costs.shape[0], dtype=bool)
-        for i, c in enumerate(costs):
-            is_efficient[i] = np.all(np.any(costs[:i] > c, axis=1)) and np.all(np.any(costs[i + 1:] > c, axis=1))
-
-        return is_efficient
-
     def non_dominated_sorting(self):
-        rank = 0
-        non_ranked = np.array(self.pool_of_solutions)
+        points = []
 
-        while non_ranked.size != 0:
+        for i, candidate in enumerate(self.pool_of_solutions):
+            points.append([float(candidate.fitness[0]), float(candidate.fitness[1])])
 
-            costs = np.empty([len(non_ranked), 2], dtype=float)
+        ndf, dl, dc, ndr = pygmo.fast_non_dominated_sorting(points)
 
-            for i in range(0, len(non_ranked)):
-                costs[i] = non_ranked[i].fitness
-
-            # True for Non-Dominated Solutions, False for Dominated/Equal Solutions
-            pareto_efficiency = self.is_pareto_efficient(costs)
-
-            ranked_solutions = non_ranked[pareto_efficiency]
-
-            for p in ranked_solutions:
-                p.rank = rank
-
-            non_ranked = non_ranked[np.invert(pareto_efficiency)]
-            rank += 1
+        for i, rank in enumerate(ndr):
+            self.pool_of_solutions[i].rank = rank
 
     def calculate_crowding_distance(self):
         '''
@@ -142,24 +125,13 @@ class DEMO(de.DifferentialEvolution):
 
     def generational_operator(self, gen_trial, pop_index):
 
-        costs = np.array((gen_trial.fitness, self.population[pop_index].fitness))
-
-        # The generated individual dominates the parent
-        pareto_efficiency = self.is_pareto_efficient(costs)
-
-        if pareto_efficiency[0] and pareto_efficiency[1]:  # Both solutions are in the optimal front (non-dominance)
-            self.pool_of_solutions.append(copy.deepcopy(self.population[pop_index]))
+        # If the mutated vector dominates the parent, it takes the parent's position in the offspring
+        if pygmo.pareto_dominance(gen_trial.fitness, self.population[pop_index].fitness):
+            self.pool_of_solutions[pop_index] = copy.deepcopy(gen_trial)
+        elif pygmo.pareto_dominance(self.population[pop_index].fitness, gen_trial.fitness):  # The parent dominates the mutant vector
+            return
+        else:  # If there is not dominance between solutions, both of them goes to the offspring vector
             self.pool_of_solutions.append(copy.deepcopy(gen_trial))
-            self.new_individuals.append(self.pool_of_solutions[-1])
-        elif pareto_efficiency[0] and not pareto_efficiency[1]:  # Offspring dominates parent
-            self.pool_of_solutions.append(copy.deepcopy(gen_trial))
-            self.new_individuals.append(self.pool_of_solutions[-1])
-        elif not pareto_efficiency[0] and pareto_efficiency[1]:  # Parent dominates offspring
-            self.pool_of_solutions.append(copy.deepcopy(self.population[pop_index]))
-        else:  # Non-dominance (optimal front)
-            self.pool_of_solutions.append(copy.deepcopy(self.population[pop_index]))
-            self.pool_of_solutions.append(copy.deepcopy(gen_trial))
-            self.new_individuals.append(self.pool_of_solutions[-1])
 
     def truncate_offspring(self):
 
@@ -206,32 +178,28 @@ class DEMO(de.DifferentialEvolution):
         self.population = np.empty(self.NP, object)
         for i, sol in enumerate(aux_offspring):
             self.population[i] = copy.deepcopy(self.pool_of_solutions[sol['index']])
+        self.pool_of_solutions = []
 
     def rand_1_bin(self, j, trial_individual):
 
-        pool = np.concatenate((self.population, self.new_individuals))
-
         while 1:
-            r1 = self.selection_operator()
+            r1, r1_dimensions = self.selection_operator()
             if r1 != j:
                 break
 
         while 1:
-            r2 = self.selection_operator()
+            r2, r2_dimensions = self.selection_operator()
             if r2 != j and r2 != r1:
                 break
 
         while 1:
-            r3 = self.selection_operator()
+            r3, r3_dimensions = self.selection_operator()
             if r3 != r2 and r3 != r1 and r3 != j:
                 break
 
         jRand = random.randint(0, self.problem.dimensionality - 1)
 
         trial = trial_individual.dimensions
-        r1_dimensions = pool[r1].dimensions
-        r2_dimensions = pool[r2].dimensions
-        r3_dimensions = pool[r3].dimensions
 
         for d in range(0, self.problem.dimensionality):
             if random.random() <= self.CR or d == jRand:
@@ -242,9 +210,9 @@ class DEMO(de.DifferentialEvolution):
         return trial
 
     def selection_operator(self):
-        pool = np.concatenate((self.population, self.new_individuals))
+        index_to_return = random.randint(0, (len(self.pool_of_solutions) - 1))
 
-        return random.randint(0, len(pool)-1)
+        return index_to_return, self.pool_of_solutions[index_to_return].dimensions
 
     def optimize(self, i_pop=None):
         if i_pop is None:
@@ -254,7 +222,10 @@ class DEMO(de.DifferentialEvolution):
 
         for i in range(0, self.MAX):
 
+            if i % 5 == 0:
+                print('Generation ', i)
 
+            self.pool_of_solutions = list(self.population)
 
             for j in range(0, self.NP):
 
@@ -273,7 +244,9 @@ class DEMO(de.DifferentialEvolution):
             self.calculate_crowding_distance()
             self.truncate_offspring()
 
+        mean_p_distance = 0
         for i, solution in enumerate(self.population):
-            print(i, self.population[i].fitness, self.population[i].dimensions)
+            print(self.problem.return_p_distance(solution.dimensions))
+            mean_p_distance += self.problem.return_p_distance(solution.dimensions)
 
-        return True
+        return mean_p_distance/self.NP
