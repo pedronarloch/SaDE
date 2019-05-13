@@ -319,7 +319,6 @@ class DifferentialEvolution:
 
         if i_pop is None:
             self.init_population()
-            #self.init_population_by_apl()
             self.offspring = np.empty(self.NP, object)
         else:
             self.population = i_pop
@@ -332,7 +331,7 @@ class DifferentialEvolution:
 
             if i % 5 == 0:
                 print("Generation: ", i, " Fitness: ", self.best_ind[i].fitness, " Diversity: ", self.diversity[i],
-                      " Pop Len: ", len(self.population), "Strategy: ", self.strategy)
+                      " Pop Mean: ", self.population_mean[i], "Strategy: ", self.strategy)
 
             for j in range(0, self.NP):
 
@@ -390,3 +389,4 @@ class DifferentialEvolution:
         cvg.close()
 
         best_ind = self.population[self.get_best_individual()]
+        print(best_ind.dimensions)

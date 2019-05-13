@@ -1,0 +1,81 @@
+HETATM    1  N01 AH1 A 500      11.741  23.343   5.989  1.00 19.81      C    N  
+HETATM    2  C02 AH1 A 500      12.265  22.028   6.051  1.00 20.51      C    C  
+HETATM    3  N03 AH1 A 500      13.507  21.739   5.638  1.00 19.11      C    N  
+HETATM    4  C04 AH1 A 500      14.652  22.663   5.760  1.00 20.96      C    C  
+HETATM    5  C05 AH1 A 500      14.574  23.829   4.674  1.00 18.24      C    C  
+HETATM    6  C06 AH1 A 500      13.431  24.851   4.942  1.00 18.09      C    C  
+HETATM    7  C07 AH1 A 500      11.994  24.268   4.839  1.00 19.29      C    C  
+HETATM    8  C08 AH1 A 500      10.453  23.612   6.669  1.00 19.69      C    C  
+HETATM    9  C09 AH1 A 500      10.285  24.954   7.281  1.00 19.77      C    C  
+HETATM   10  C10 AH1 A 500       9.180  25.737   6.968  1.00 19.95      C    C  
+HETATM   11  C11 AH1 A 500       9.039  27.011   7.522  1.00 22.27      C    C  
+HETATM   12  C12 AH1 A 500      10.011  27.526   8.396  1.00 18.67      C    C  
+HETATM   13  C13 AH1 A 500      11.100  26.732   8.696  1.00 19.27      C    C  
+HETATM   14  C14 AH1 A 500      11.227  25.436   8.130  1.00 17.22      C    C  
+HETATM   15  O15 AH1 A 500      11.549  21.091   6.503  1.00 17.64      C    O  
+HETATM   16  C16 AH1 A 500      13.925  20.389   5.492  1.00 18.94      C    C  
+HETATM   17  C17 AH1 A 500      14.841  19.956   4.360  1.00 21.20      C    C  
+HETATM   18  C18 AH1 A 500      16.112  19.365   4.620  1.00 19.23      C    C  
+HETATM   19  C19 AH1 A 500      16.890  18.931   3.539  1.00 22.81      C    C  
+HETATM   20  C20 AH1 A 500      16.459  19.059   2.217  1.00 19.48      C    C  
+HETATM   21  C21 AH1 A 500      15.222  19.650   1.938  1.00 21.62      C    C  
+HETATM   22  C22 AH1 A 500      14.399  20.099   3.000  1.00 19.56      C    C  
+HETATM   23  C23 AH1 A 500      14.603  23.293   7.116  1.00 19.82      C    C  
+HETATM   24  O24 AH1 A 500      14.744  22.495   8.337  1.00 22.97      C    O  
+HETATM   25  C25 AH1 A 500      15.782  21.774   8.660  1.00 22.46      C    C  
+HETATM   26  C26 AH1 A 500      15.625  20.603   9.466  1.00 26.14      C    C  
+HETATM   27  C27 AH1 A 500      16.778  19.855   9.822  1.00 25.90      C    C  
+HETATM   28  C28 AH1 A 500      18.069  20.270   9.368  1.00 25.42      C    C  
+HETATM   29  C29 AH1 A 500      18.226  21.418   8.555  1.00 25.26      C    C  
+HETATM   30  C30 AH1 A 500      17.084  22.167   8.209  1.00 24.88      C    C  
+HETATM   31  O31 AH1 A 500      15.746  24.539   4.742  1.00 14.56      C    O  
+HETATM   32  O32 AH1 A 500      13.550  25.840   3.984  1.00 21.72      C    O  
+HETATM   33  C33 AH1 A 500      11.832  23.452   3.515  1.00 19.18      C    C  
+HETATM   34  O34 AH1 A 500      10.461  23.135   3.063  1.00 22.93      C    O  
+HETATM   35  C35 AH1 A 500       9.524  24.083   2.747  1.00 22.24      C    C  
+HETATM   36  C36 AH1 A 500       9.909  25.327   2.231  1.00 23.26      C    C  
+HETATM   37  C37 AH1 A 500       8.945  26.310   1.880  1.00 26.71      C    C  
+HETATM   38  C38 AH1 A 500       7.565  26.060   2.052  1.00 26.63      C    C  
+HETATM   39  C39 AH1 A 500       7.175  24.809   2.588  1.00 26.74      C    C  
+HETATM   40  C40 AH1 A 500       8.171  23.826   2.927  1.00 23.99      C    C  
+CONECT    1    2    7    8
+CONECT    2    1    3   15
+CONECT    3    2    4   16
+CONECT    4    3    5   23
+CONECT    5    4    6   31
+CONECT    6    5    7   32
+CONECT    7    1    6   33
+CONECT    8    1    9
+CONECT    9    8   10   14
+CONECT   10    9   11
+CONECT   11   10   12
+CONECT   12   11   13
+CONECT   13   12   14
+CONECT   14    9   13
+CONECT   15    2
+CONECT   16    3   17
+CONECT   17   16   18   22
+CONECT   18   17   19
+CONECT   19   18   20
+CONECT   20   19   21
+CONECT   21   20   22
+CONECT   22   17   21
+CONECT   23    4   24
+CONECT   24   23   25
+CONECT   25   24   26   30
+CONECT   26   25   27
+CONECT   27   26   28
+CONECT   28   27   29
+CONECT   29   28   30
+CONECT   30   25   29
+CONECT   31    5
+CONECT   32    6
+CONECT   33    7   34
+CONECT   34   33   35
+CONECT   35   34   36   40
+CONECT   36   35   37
+CONECT   37   36   38
+CONECT   38   37   39
+CONECT   39   38   40
+CONECT   40   35   39
+END

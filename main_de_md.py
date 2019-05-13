@@ -1,9 +1,9 @@
 import os
 import time
-
-import differential_evolution_multi_objective as demo
+import differential_evolution_ufrgs as de
+import numpy as np
 from problem import molecular_docking_problem as md
-import sys
+
 
 def retrieve_init_pop(protein, run_id):
     ind_list = list()
@@ -18,10 +18,7 @@ def retrieve_init_pop(protein, run_id):
 
 
 problem_md = md.MolecularDockingProblem()
-problem_md.dump_pdb()
-sys.exit()
-
-algorithm_de = demo.DEMO(problem_md)
+algorithm_de = de.DifferentialEvolution(problem_md)
 
 for i in range(0, 30):
 
@@ -36,9 +33,9 @@ for i in range(0, 30):
 
     #    pre_defined_pop[k] = ind
 
-    os.makedirs("./results/differential_evolution/" + problem_md.docking_complex + "/DEMO/" + str(i + 1))
+    os.makedirs("./results/differential_evolution/" + problem_md.docking_complex + "/" + str(i + 1))
     init_time = time.time()
-    file_name = "./results/differential_evolution/" + problem_md.docking_complex + "/DEMO/" + str(i + 1) + "/"
+    file_name = "./results/differential_evolution/" + problem_md.docking_complex + "/" + str(i + 1) + "/"
 
     #algorithm_de.optimize(pre_defined_pop)
     algorithm_de.optimize()
@@ -49,6 +46,15 @@ for i in range(0, 30):
     t_file.write(str(end_time - init_time) + " seconds")
     t_file.close()
 
-    #problem_psp.generate_pdb(algorithm_de.population[algorithm_de.get_best_individual()].dimensions, file_name + "lowest_final_energy.pdb")
+    init_ligand_pos = open(file_name+"init_ligand", "w")
+    init_ligand_pos.write(str(problem_md.random_initial_dimensions))
+    init_ligand_pos.close()
+
+    init_pop = open(file_name+"init_pop", "w")
+    for j in range(0, len(algorithm_de.initial_population)):
+        init_pop.write(np.array2string(algorithm_de.initial_population[j].dimensions, max_line_width=999999, precision=4,
+                                       separator=","))
+        init_pop.write("\n")
+    init_pop.close()
 
     algorithm_de.dump()
