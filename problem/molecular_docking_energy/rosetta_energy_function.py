@@ -1,6 +1,7 @@
 # TODO list the objects used, avoiding the import of the whole lib
 
 import pyrosetta
+from pyrosetta.toolbox import get_hbonds
 import sys
 
 
@@ -20,7 +21,7 @@ class RosettaScoringFunction:
         self.pos_atoms = {}
         self.modified_atoms = None
 
-        self.single_scorefxn = pyrosetta.get_fa_scorefxn()
+        #self.single_scorefxn = pyrosetta.get_fa_scorefxn()
         self.scorefxn = pyrosetta.create_score_function("ligand")
 
     def set_ligand_params(self, parameter_file):
@@ -59,15 +60,6 @@ class RosettaScoringFunction:
 
     def evaluate_complex(self):
         score = self.scorefxn(self.pose)
-        print(score)
-        print('-------------')
-        print(self.scorefxn.show(self.pose))
-        print('-------------')
-        print(self.pose.energies().total_energy())
-        print('-------------')
-        print(self.pose.energies().total_energies())
-
-        sys.exit()
 
         return score
 

@@ -1,5 +1,5 @@
-receptor = instances/1AJX/receptor.pdbqt
-ligand = instances/1AJX/modified/ligand.pdbqt
+receptor = instances/1AJX/macro.pdbqt
+ligand = ligand_h.pdbqt
 center_x = 14.652
 center_y = 22.663
 center_z = 5.76

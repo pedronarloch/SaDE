@@ -2,7 +2,7 @@ import copy
 import random
 from math import pi, sin, cos
 from subprocess import getstatusoutput
-import sys
+
 import numpy as np
 import yaml
 
@@ -13,7 +13,7 @@ from problem.molecular_docking_energy import rosetta_energy_function
 
 class MolecularDockingProblem(Problem):
 
-    def __init__(self, ligand_initial_dimensions=[]):
+    def __init__(self):
         super().__init__()
         print("Molecular Docking Problem")
 
@@ -27,7 +27,7 @@ class MolecularDockingProblem(Problem):
 
         self.box_bounds = np.empty(3)
         self.center_bounds = np.empty(3)
-        self.score_function_type = "VINA"
+        self.score_function_type = "ROSETTA"
 
         self.vina_path = ""
         self.vina_config = ""
@@ -55,8 +55,7 @@ class MolecularDockingProblem(Problem):
         self.index_ref = 0
         self.index_sec = 0
 
-        #self.energy_function = rosetta_energy_function.RosettaScoringFunction(self.docking_complex)
-        self.energy_function = None
+        self.energy_function = rosetta_energy_function.RosettaScoringFunction(self.docking_complex)
 
         self.read_ligand_file()
         self.original_pos_atoms = copy.copy(self.pos_atoms)
@@ -64,8 +63,11 @@ class MolecularDockingProblem(Problem):
         self.get_bounds()
         self.is_multi_objective = False
 
+        self.rosetta_energy_function_config()
+
         self.random_initial_dimensions = []
-        self.randomize_ligand(ligand_initial_dimensions)
+        #self.randomize_ligand(self.random_initial_dimensions)
+
 
     def read_parameters(self):
         with open("docking_config.yaml", 'r') as stream:
@@ -183,13 +185,14 @@ class MolecularDockingProblem(Problem):
             energy = float((result_string[1].split("Affinity:")[1]).split()[0])
 
         else:
-            self.rosetta_energy_function_config()
+
+
             self.energy_function.update_ligand(self.get_dic_modified_atoms())
 
             energy = self.energy_function.evaluate_complex()
 
-        if self.is_multi_objective:
-            energy = self.evaluate_mo(angles)
+        #if self.is_multi_objective:
+        #    energy = self.evaluate_mo(angles)
 
         return energy
 
@@ -221,6 +224,7 @@ class MolecularDockingProblem(Problem):
                 self.mod_pos_atoms[i] = self.translate_to_ref(self.mod_pos_atoms[i], reference, (0.0, 0.0, 0.0))[0]
                 self.mod_pos_atoms[i] = self.rotate_matrix_theta(angle, vecRef, [self.mod_pos_atoms[i]])[0]
                 self.mod_pos_atoms[i] = self.translate_to_ref(self.mod_pos_atoms[i], (0.0, 0.0, 0.0), reference)[0]
+
 
     def translate_position(self, index):
         return self.index_translate.get(index)
@@ -319,6 +323,9 @@ class MolecularDockingProblem(Problem):
 
         self.random_initial_dimensions = copy.copy(random_ligand_position)
 
+        if self.score_function_type:
+            self.energy_function.dump_ligand_pdb('instances/random_ligand.pdb')
+
     def dump_pdb(self):
         self.energy_function.dump_ligand_pdb()
 
@@ -346,7 +353,11 @@ class MolecularDockingProblem(Problem):
 
         new_pdb.close()
 
-    def export_pdbqt(self, solutions):
+    def export_pdbqt(self, solutions, path=""):
         for i, angles in enumerate(solutions):
             self.perform_docking(angles)
-            self.write_ligand('instances/'+self.docking_complex+'/', file_format='pdbqt', name='solution_' + str(i)+'.pdbqt')
+            if path == "":
+                self.write_ligand('instances/'+self.docking_complex+'/', file_format='pdbqt', name='solution_' + str(i)+'.pdbqt')
+            else:
+                self.write_ligand(path, file_format='pdbqt', name='solution_' + str(i) + '.pdbqt')
+

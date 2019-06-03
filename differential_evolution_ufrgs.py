@@ -324,6 +324,7 @@ class DifferentialEvolution:
             self.population = i_pop
             self.offspring = np.empty(len(self.population), object)
 
+
         for i in range(0, self.MAX):
             self.best_ind[i] = self.population[self.get_best_individual()]
             self.diversity[i] = self.update_diversity()

@@ -1,6 +1,6 @@
-np: 10
+np: 100
 f: 0.5
-cr: 0.5
-maxIteractions: 10
-strategy: 0
-lp: 50 #saDE learning stage
+cr: 0.9
+maxIteractions: 10000
+strategy: 1
+lp: 0 #saDE learning stage

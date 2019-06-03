@@ -1,44 +1,61 @@
 import os
 import time
-import differential_evolution_ufrgs as de
+
 import numpy as np
+
+import differential_evolution_ufrgs as de
+from individual import Individual
 from problem import molecular_docking_problem as md
 
 
-def retrieve_init_pop(protein, run_id):
-    ind_list = list()
-    f = open("./results_canonical_de/PSP/APL/" + protein + "/" + str(run_id + 1) + "/init_pop_n", 'r')
-    for line in f:
-        ind = [float(vals) for vals in line.split(sep=',')]
-        ind_list.append(ind)
+def retrieve_init_pop(instance, run_id):
+
+    ind_list = np.empty(100, dtype=np.ndarray)
+    f = open("./initial_populations/molecular_docking/" + instance + "/" + str(run_id + 1) + "/init_pop", 'rb')
+
+    for i, line in enumerate(f):
+        line = line.translate(None, delete=b'[]\n')
+        ind_list[i] = np.fromstring(line.decode('utf-8'), sep=',')
 
     f.close()
 
-    return ind_list
+    initial_ligand = np.empty(1, dtype=np.ndarray)
+    f = open("./initial_populations/molecular_docking/"+instance+"/"+str(run_id+1)+"/init_ligand", 'rb')
+
+    for line in f:
+        line = line.translate(None, delete=b'[]\n')
+        initial_ligand = np.fromstring(line.decode('utf-8'), sep=',')
+
+    return ind_list, initial_ligand
 
 
 problem_md = md.MolecularDockingProblem()
 algorithm_de = de.DifferentialEvolution(problem_md)
 
-for i in range(0, 30):
 
-    #pre_defined_pop = np.empty(algorithm_de.NP, individuals.Individual)
-    #list_pop = retrieve_init_pop(problem_psp.protein, i)
+for i in range(0, 1):
 
-    #for k in range(0, algorithm_de.NP):
-    #    ind = individuals.Individual(k, problem_psp.dimensions)
-    #    ind.ind_id = k
-    #    ind.dimensions = list_pop[k]
-    #    ind.fitness = problem_psp.evaluate(ind.dimensions)
+    pre_defined_pop = np.empty(algorithm_de.NP, Individual)
+    list_pop, init_ligand = retrieve_init_pop(problem_md.docking_complex, i)
+    problem_md.randomize_ligand(init_ligand)
 
-    #    pre_defined_pop[k] = ind
+    for k in range(0, algorithm_de.NP):
+        ind = Individual(k, problem_md.dimensionality)
+        ind.ind_id = k
+        ind.dimensions = list_pop[k]
+        ind.fitness = problem_md.evaluate(ind.dimensions)
 
-    os.makedirs("./results/differential_evolution/" + problem_md.docking_complex + "/" + str(i + 1))
+        pre_defined_pop[k] = ind
+
+    os.makedirs("./results/differential_evolution/" + problem_md.docking_complex + "/" + str(algorithm_de.strategy)
+                + "/" + str(i + 1))
     init_time = time.time()
-    file_name = "./results/differential_evolution/" + problem_md.docking_complex + "/" + str(i + 1) + "/"
+    file_name = "./results/differential_evolution/" + problem_md.docking_complex + "/" + str(algorithm_de.strategy) \
+                + "/" + str(i + 1) + "/"
 
-    #algorithm_de.optimize(pre_defined_pop)
-    algorithm_de.optimize()
+    algorithm_de.optimize(pre_defined_pop)
+
+    # algorithm_de.optimize()
     algorithm_de.get_results_report(file_name + "convergence")
     end_time = time.time()
 
@@ -56,5 +73,22 @@ for i in range(0, 30):
                                        separator=","))
         init_pop.write("\n")
     init_pop.close()
+
+    final_pop = open(file_name + "final_pop", "w")
+    for j in range(0, len(algorithm_de.population)):
+        final_pop.write(
+            np.array2string(algorithm_de.population[j].dimensions, max_line_width=999999, precision=4,
+                            separator=","))
+        final_pop.write("\n")
+    final_pop.close()
+
+    best_individual = algorithm_de.population[algorithm_de.get_best_individual()]
+
+    best_ind = open(file_name+"best_conformation", "w")
+    best_ind.write(np.array2string(best_individual.dimensions, max_line_width=999999, precision=4,
+                                   separator=","))
+    best_ind.close()
+    problem_md.evaluate(best_individual.dimensions)
+    problem_md.energy_function.dump_ligand_pdb(file_name+"best_individual.pdb")
 
     algorithm_de.dump()
