@@ -1,0 +1,130 @@
+REMARK  14 active torsions:
+REMARK  status: ('A' for Active; 'I' for Inactive)
+REMARK    1  A    between atoms: N1_1  and  C5_8 
+REMARK    2  A    between atoms: N2_3  and  C18_23 
+REMARK    3  A    between atoms: C1_4  and  C32_41 
+REMARK    4  A    between atoms: C2_5  and  O3_30 
+REMARK    5  A    between atoms: C3_6  and  O4_31 
+REMARK    6  A    between atoms: C4_7  and  C25_32 
+REMARK    7  A    between atoms: C5_8  and  C6_9 
+REMARK    8  A    between atoms: C8_11  and  C33_42 
+REMARK    9  A    between atoms: O2_16  and  C12_17 
+REMARK   10  A    between atoms: O2_16  and  C32_41 
+REMARK   11  A    between atoms: C18_23  and  C19_24 
+REMARK   12  A    between atoms: C25_32  and  O5_33 
+REMARK   13  A    between atoms: O5_33  and  C26_34 
+REMARK       I    between atoms: C33_42  and  N3_44 
+REMARK   14  A    between atoms: N3_44  and  C34_45 
+ROOT
+HETATM    1  N1  ATX X   1      11.349  23.709   5.942  1.00 20.00    -0.281 N 
+HETATM    2  S1  ATX X   1      11.806  22.203   6.446  1.00 20.00     0.320 S 
+HETATM    3  N2  ATX X   1      13.431  22.292   6.215  1.00 20.00    -0.281 N 
+HETATM    4  C1  ATX X   1      13.851  22.223   4.796  1.00 20.00     0.072 C 
+HETATM    5  C2  ATX X   1      14.022  23.605   4.144  1.00 20.00     0.084 C 
+HETATM    6  C3  ATX X   1      13.048  24.679   4.615  1.00 20.00     0.084 C 
+HETATM    7  C4  ATX X   1      11.556  24.303   4.610  1.00 20.00     0.072 C 
+HETATM    8  O1  ATX X   1      11.236  21.156   5.599  1.00 20.00    -0.182 OA
+HETATM    9  O6  ATX X   1      11.584  22.102   7.888  1.00 20.00    -0.182 OA
+HETATM   10  H1  ATX X   1      13.026  21.747   4.266  1.00 20.00     0.081 H 
+HETATM   11  H2  ATX X   1      13.826  23.422   3.087  1.00 20.00     0.090 H 
+HETATM   12  H3  ATX X   1      13.255  24.846   5.672  1.00 20.00     0.090 H 
+HETATM   13  H4  ATX X   1      11.011  25.219   4.382  1.00 20.00     0.081 H 
+ENDROOT
+BRANCH   1  14
+HETATM   14  C5  ATX X   1      10.170  24.189   6.519  1.00 20.00     0.031 C 
+HETATM   15  H5  ATX X   1      10.176  23.545   7.399  1.00 20.00     0.072 H 
+HETATM   16  H6  ATX X   1       9.451  24.177   5.700  1.00 20.00     0.072 H 
+BRANCH  14  17
+HETATM   17  C6  ATX X   1       9.892  25.457   7.218  1.00 20.00    -0.039 A 
+HETATM   18  C11 ATX X   1      10.745  25.849   8.302  1.00 20.00    -0.075 A 
+HETATM   19  C10 ATX X   1      10.527  27.076   8.987  1.00 20.00    -0.081 A 
+HETATM   20  H10 ATX X   1      11.568  25.201   8.604  1.00 20.00     0.084 H 
+HETATM   21  H9  ATX X   1      11.175  27.369   9.813  1.00 20.00     0.083 H 
+HETATM   22  C9  ATX X   1       9.456  27.914   8.582  1.00 20.00    -0.068 A 
+HETATM   23  C8  ATX X   1       8.600  27.521   7.490  1.00 20.00     0.032 A 
+HETATM   24  H8  ATX X   1       9.280  28.858   9.098  1.00 20.00     0.085 H 
+HETATM   25  C7  ATX X   1       8.825  26.293   6.815  1.00 20.00    -0.060 A 
+HETATM   26  H7  ATX X   1       8.178  25.996   5.990  1.00 20.00     0.086 H 
+BRANCH  23  27
+HETATM   27  C33 ATX X   1       7.487  28.417   7.050  1.00 20.00     0.251 C 
+HETATM   28  N3  ATX X   1       6.290  27.868   6.633  1.00 20.00    -0.361 N 
+HETATM   29  H34 ATX X   1       6.155  26.868   6.599  1.00 20.00     0.162 HD
+HETATM   30  O7  ATX X   1       7.660  29.662   7.084  1.00 20.00    -0.268 OA
+BRANCH  28  31
+HETATM   31  C34 ATX X   1       5.236  28.784   6.247  1.00 20.00    -0.018 C 
+HETATM   32  H37 ATX X   1       4.942  28.587   5.216  1.00 20.00     0.056 H 
+HETATM   33  H36 ATX X   1       5.596  29.809   6.333  1.00 20.00     0.056 H 
+HETATM   34  H35 ATX X   1       4.376  28.645   6.902  1.00 20.00     0.056 H 
+ENDBRANCH  28  31
+ENDBRANCH  23  27
+ENDBRANCH  14  17
+ENDBRANCH   1  14
+BRANCH   7  35
+HETATM   35  C25 ATX X   1      10.913  23.466   3.470  1.00 20.00     0.048 C 
+HETATM   36  H26 ATX X   1      11.174  23.892   2.502  1.00 20.00     0.078 H 
+HETATM   37  H25 ATX X   1      11.276  22.438   3.497  1.00 20.00     0.078 H 
+BRANCH  35  38
+HETATM   38  O5  ATX X   1       9.472  23.505   3.658  1.00 20.00    -0.349 OA
+BRANCH  38  39
+HETATM   39  C26 ATX X   1       8.661  24.401   3.003  1.00 20.00     0.068 A 
+HETATM   40  C31 ATX X   1       7.313  24.033   2.707  1.00 20.00    -0.051 A 
+HETATM   41  H31 ATX X   1       6.949  23.047   2.995  1.00 20.00     0.087 H 
+HETATM   42  C30 ATX X   1       6.432  24.943   2.037  1.00 20.00    -0.080 A 
+HETATM   43  H30 ATX X   1       5.405  24.649   1.822  1.00 20.00     0.083 H 
+HETATM   44  C29 ATX X   1       6.900  26.230   1.653  1.00 20.00    -0.083 A 
+HETATM   45  H29 ATX X   1       6.230  26.922   1.143  1.00 20.00     0.083 H 
+HETATM   46  C28 ATX X   1       8.244  26.618   1.933  1.00 20.00    -0.080 A 
+HETATM   47  C27 ATX X   1       9.116  25.712   2.605  1.00 20.00    -0.051 A 
+HETATM   48  H28 ATX X   1       8.603  27.603   1.634  1.00 20.00     0.083 H 
+HETATM   49  H27 ATX X   1      10.141  26.014   2.821  1.00 20.00     0.087 H 
+ENDBRANCH  38  39
+ENDBRANCH  35  38
+ENDBRANCH   7  35
+BRANCH   6  50
+HETATM   50  O4  ATX X   1      13.274  25.832   3.814  1.00 20.00    -0.391 OA
+HETATM   51  H24 ATX X   1      13.158  26.621   4.348  1.00 20.00     0.210 HD
+ENDBRANCH   6  50
+BRANCH   3  52
+HETATM   52  C18 ATX X   1      14.271  22.898   7.306  1.00 20.00     0.031 C 
+HETATM   53  H17 ATX X   1      14.878  23.675   6.841  1.00 20.00     0.072 H 
+HETATM   54  H16 ATX X   1      13.531  23.210   8.043  1.00 20.00     0.072 H 
+BRANCH  52  55
+HETATM   55  C19 ATX X   1      15.213  22.033   8.110  1.00 20.00    -0.040 A 
+HETATM   56  C20 ATX X   1      14.698  21.122   9.083  1.00 20.00    -0.075 A 
+HETATM   57  C21 ATX X   1      15.588  20.294   9.842  1.00 20.00    -0.082 A 
+HETATM   58  H18 ATX X   1      13.623  21.056   9.249  1.00 20.00     0.084 H 
+HETATM   59  H19 ATX X   1      15.190  19.600  10.582  1.00 20.00     0.083 H 
+HETATM   60  C22 ATX X   1      17.005  20.379   9.626  1.00 20.00    -0.083 A 
+HETATM   61  H20 ATX X   1      17.682  19.748  10.202  1.00 20.00     0.083 H 
+HETATM   62  C23 ATX X   1      17.531  21.294   8.653  1.00 20.00    -0.082 A 
+HETATM   63  C24 ATX X   1      16.634  22.115   7.901  1.00 20.00    -0.075 A 
+HETATM   64  H21 ATX X   1      18.606  21.362   8.489  1.00 20.00     0.083 H 
+HETATM   65  H22 ATX X   1      17.031  22.810   7.162  1.00 20.00     0.084 H 
+ENDBRANCH  52  55
+ENDBRANCH   3  52
+BRANCH   5  66
+HETATM   66  O3  ATX X   1      15.320  24.102   4.395  1.00 20.00    -0.391 OA
+HETATM   67  H23 ATX X   1      15.639  23.756   5.231  1.00 20.00     0.210 HD
+ENDBRANCH   5  66
+BRANCH   4  68
+HETATM   68  C32 ATX X   1      15.082  21.332   4.600  1.00 20.00     0.048 C 
+HETATM   69  H32 ATX X   1      15.282  20.807   5.534  1.00 20.00     0.078 H 
+HETATM   70  H33 ATX X   1      15.933  21.955   4.323  1.00 20.00     0.078 H 
+BRANCH  68  71
+HETATM   71  O2  ATX X   1      14.854  20.350   3.560  1.00 20.00    -0.349 OA
+BRANCH  71  72
+HETATM   72  C12 ATX X   1      15.864  19.459   3.222  1.00 20.00     0.068 A 
+HETATM   73  C17 ATX X   1      15.954  18.953   1.885  1.00 20.00    -0.051 A 
+HETATM   74  C16 ATX X   1      16.985  18.030   1.517  1.00 20.00    -0.080 A 
+HETATM   75  H15 ATX X   1      15.228  19.275   1.138  1.00 20.00     0.087 H 
+HETATM   76  C15 ATX X   1      17.943  17.605   2.489  1.00 20.00    -0.083 A 
+HETATM   77  H14 ATX X   1      17.039  17.652   0.496  1.00 20.00     0.083 H 
+HETATM   78  C14 ATX X   1      17.875  18.098   3.830  1.00 20.00    -0.080 A 
+HETATM   79  H13 ATX X   1      18.728  16.903   2.207  1.00 20.00     0.083 H 
+HETATM   80  H12 ATX X   1      18.606  17.776   4.572  1.00 20.00     0.083 H 
+HETATM   81  C13 ATX X   1      16.840  19.017   4.190  1.00 20.00    -0.051 A 
+HETATM   82  H11 ATX X   1      16.787  19.390   5.213  1.00 20.00     0.087 H 
+ENDBRANCH  71  72
+ENDBRANCH  68  71
+ENDBRANCH   4  68
+TORSDOF 14

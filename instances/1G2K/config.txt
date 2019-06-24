@@ -1,0 +1,11 @@
+receptor = instances/1G2K/macro.pdbqt
+ligand = ligand.pdbqt
+center_x = 11.349
+center_y = 23.709
+center_z = 5.942
+size_x = 11
+size_y = 11
+size_z = 11
+#ref = N1
+#sec = C5
+#partners = AB_X
