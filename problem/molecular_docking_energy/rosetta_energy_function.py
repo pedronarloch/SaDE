@@ -1,8 +1,6 @@
 # TODO list the objects used, avoiding the import of the whole lib
 
 import pyrosetta
-from pyrosetta.toolbox import get_hbonds
-import sys
 
 
 # TODO Refactor the whole class due to architectural issues.

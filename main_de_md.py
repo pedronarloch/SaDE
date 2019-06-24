@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-import differential_evolution_ufrgs as de
+import self_adaptive_differential_evolution as de
 from individual import Individual
 from problem import molecular_docking_problem as md
 
@@ -30,10 +30,11 @@ def retrieve_init_pop(instance, run_id):
 
 
 problem_md = md.MolecularDockingProblem()
-algorithm_de = de.DifferentialEvolution(problem_md)
+#algorithm_de = de.DifferentialEvolution(problem_md)
+algorithm_de = de.SADE(problem_md)
 
 
-for i in range(0, 1):
+for i in range(0, 2):
 
     pre_defined_pop = np.empty(algorithm_de.NP, Individual)
     list_pop, init_ligand = retrieve_init_pop(problem_md.docking_complex, i)
@@ -47,11 +48,9 @@ for i in range(0, 1):
 
         pre_defined_pop[k] = ind
 
-    os.makedirs("./results/differential_evolution/" + problem_md.docking_complex + "/" + str(algorithm_de.strategy)
-                + "/" + str(i + 1))
+    os.makedirs("./results/differential_evolution/" + problem_md.docking_complex + "/SaDE" + "/" + str(i + 1))
     init_time = time.time()
-    file_name = "./results/differential_evolution/" + problem_md.docking_complex + "/" + str(algorithm_de.strategy) \
-                + "/" + str(i + 1) + "/"
+    file_name = "./results/differential_evolution/" + problem_md.docking_complex + "/SaDE" + "/" + str(i + 1) + "/"
 
     algorithm_de.optimize(pre_defined_pop)
 
@@ -67,12 +66,12 @@ for i in range(0, 1):
     init_ligand_pos.write(str(problem_md.random_initial_dimensions))
     init_ligand_pos.close()
 
-    init_pop = open(file_name+"init_pop", "w")
-    for j in range(0, len(algorithm_de.initial_population)):
-        init_pop.write(np.array2string(algorithm_de.initial_population[j].dimensions, max_line_width=999999, precision=4,
-                                       separator=","))
-        init_pop.write("\n")
-    init_pop.close()
+    #init_pop = open(file_name+"init_pop", "w")
+    #for j in range(0, len(algorithm_de.initial_population)):
+    #    init_pop.write(np.array2string(algorithm_de.initial_population[j].dimensions, max_line_width=999999, precision=4,
+    #                                   separator=","))
+    #    init_pop.write("\n")
+    #init_pop.close()
 
     final_pop = open(file_name + "final_pop", "w")
     for j in range(0, len(algorithm_de.population)):
@@ -90,5 +89,7 @@ for i in range(0, 1):
     best_ind.close()
     problem_md.evaluate(best_individual.dimensions)
     problem_md.energy_function.dump_ligand_pdb(file_name+"best_individual.pdb")
+
+    algorithm_de.export_probabilities_history(file_name)
 
     algorithm_de.dump()

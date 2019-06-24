@@ -9,7 +9,7 @@ class SADE(de.DifferentialEvolution):
     LP = 0  # Learning stage generations
     CRm = 0.5  # Crossover memory
     CRs = []
-    mutation_quantity = 5
+    mutation_quantity = 4
     ns = np.zeros(mutation_quantity)  # sucessfull rating
     nf = np.zeros(mutation_quantity)  # fails rating
     probs = np.zeros(mutation_quantity)  # probabilities
@@ -20,7 +20,7 @@ class SADE(de.DifferentialEvolution):
         self.problem = problem
         self.read_parameters()
 
-        dtype = [('generation', int), ('rand', float), ('best', float), ('ctr', float), ('ctb', float), ('cta', float)]
+        dtype = [('generation', int), ('rand', float), ('best', float), ('ctr', float), ('ctb', float)]
         self.prob_history = np.empty(self.MAX, dtype=dtype)
 
         for i in range(0, self.mutation_quantity):
@@ -50,14 +50,15 @@ class SADE(de.DifferentialEvolution):
         for i in range(0, self.mutation_quantity):
             self.probs[i] = 1 / self.mutation_quantity
 
-        dtype = [('generation', int), ('rand', float), ('best', float), ('ctr', float), ('ctb', float), ('cta', float)]
+        dtype = [('generation', int), ('rand', float), ('best', float), ('ctr', float), ('ctb', float)]
         self.prob_history = np.empty(self.MAX, dtype=dtype)
 
     def learning_process(self):
         acum_prob = 0
         self.dump()
 
-        self.init_population_by_apl()
+        #self.init_population_by_apl()
+        self.init_population()
 
         for i in range(0, self.LP):
 
@@ -135,12 +136,19 @@ class SADE(de.DifferentialEvolution):
         self.CRs.clear()
         self.dump()
 
-        self.init_population_by_apl()
+        #self.init_population_by_apl()
+
+        if i_pop is None:
+            self.init_population()
+            self.offspring = np.empty(self.NP, object)
+        else:
+            self.population = i_pop
+            self.offspring = np.empty(len(self.population), object)
 
         for i in range(0, self.MAX):
             self.best_ind[i] = self.population[self.get_best_individual()]
             self.diversity[i] = self.update_diversity()
-            self.prob_history[i] = (i, self.probs[0], self.probs[1], self.probs[2], self.probs[3], self.probs[4])
+            self.prob_history[i] = (i, self.probs[0], self.probs[1], self.probs[2], self.probs[3])
 
             if i % 25 == 0 and i > 0:
                 try:
@@ -219,13 +227,12 @@ class SADE(de.DifferentialEvolution):
     def export_probabilities_history(self, file_path):
         f = open(file_path + 'prob_history', 'w')
 
-        f.write('generation\trand\tbest\tctr\tctb\tcta\n')
+        f.write('generation\trand\tbest\tctr\tctb\n')
 
         for probabilities in self.prob_history:
             f.write(str(probabilities[0]) + "\t")
             f.write(str(probabilities[1]) + "\t")
             f.write(str(probabilities[2]) + "\t")
             f.write(str(probabilities[3]) + "\t")
-            f.write(str(probabilities[4]) + "\t")
-            f.write(str(probabilities[5]) + "\n")
+            f.write(str(probabilities[4]) + "\n")
         f.close()

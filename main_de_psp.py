@@ -24,6 +24,9 @@ def retrieve_init_pop(protein, run_id):
 problem_psp = psp.ProteinStructurePredictionProblem()
 algorithm_de = demo.DEMO(problem_psp)
 
+sys.exit()
+
+
 for i in range(0, 30):
 
     pre_defined_pop = np.empty(algorithm_de.NP, individuals.Individual)

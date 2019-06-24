@@ -186,7 +186,6 @@ class MolecularDockingProblem(Problem):
 
         else:
 
-
             self.energy_function.update_ligand(self.get_dic_modified_atoms())
 
             energy = self.energy_function.evaluate_complex()

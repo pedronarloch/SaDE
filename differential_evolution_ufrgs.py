@@ -390,4 +390,3 @@ class DifferentialEvolution:
         cvg.close()
 
         best_ind = self.population[self.get_best_individual()]
-        print(best_ind.dimensions)
